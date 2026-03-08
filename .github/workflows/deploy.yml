@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - claude/side-a-web-app-Sn0jY
+  workflow_dispatch:
 
 permissions:
   contents: write
