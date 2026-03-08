@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import { useSwipe } from '../hooks/useSwipe'
+import { fetchLyrics } from '../lib/lyrics'
 
 export default function Lyrics() {
   const { albumId, trackId } = useParams()
   const navigate = useNavigate()
-  const { albums } = useCollectionContext()
+  const { albums, updateAlbum } = useCollectionContext()
   const [currentTrackId, setCurrentTrackId] = useState(trackId)
   const [direction, setDirection] = useState(0)
+  // 'idle' | 'loading' | 'done'
+  const [fetchState, setFetchState] = useState('idle')
 
   const album = albums.find(a => a.id === albumId)
 
@@ -33,6 +36,32 @@ export default function Lyrics() {
     return null
   }
 
+  // Fetch lyrics on-demand when track has none stored
+  useEffect(() => {
+    if (currentTrack.lyrics) {
+      setFetchState('done')
+      return
+    }
+    if (!album.artist || !currentTrack.title) {
+      setFetchState('done')
+      return
+    }
+
+    setFetchState('loading')
+    fetchLyrics(album.artist, currentTrack.title).then(text => {
+      if (text) {
+        // Persist to localStorage via updateAlbum
+        updateAlbum({
+          ...album,
+          tracks: album.tracks.map(t =>
+            t.id === currentTrack.id ? { ...t, lyrics: text } : t
+          ),
+        })
+      }
+      setFetchState('done')
+    })
+  }, [currentTrackId])
+
   const goTo = (newIndex, dir) => {
     if (newIndex < 0 || newIndex >= tracks.length) return
     setDirection(dir)
@@ -44,16 +73,16 @@ export default function Lyrics() {
   const goPrev = () => goTo(currentIndex - 1, -1)
   const goNext = () => goTo(currentIndex + 1, 1)
 
-  const swipeHandlers = useSwipe({
-    onSwipeLeft: goNext,
-    onSwipeRight: goPrev,
-  })
+  const swipeHandlers = useSwipe({ onSwipeLeft: goNext, onSwipeRight: goPrev })
 
   const lyricsVariants = {
     initial: (dir) => ({ opacity: 0, x: dir * 60 }),
     animate: { opacity: 1, x: 0, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } },
     exit: (dir) => ({ opacity: 0, x: dir * -60, transition: { duration: 0.2 } }),
   }
+
+  // The track lyrics — may have been updated in context after fetch
+  const updatedTrack = tracks.find(t => t.id === currentTrackId) ?? currentTrack
 
   return (
     <div
@@ -66,20 +95,15 @@ export default function Lyrics() {
       {...swipeHandlers}
     >
       {/* Track header */}
-      <div
-        style={{
-          padding: '20px 24px 0',
-          textAlign: 'center',
-          flexShrink: 0,
-        }}
-      >
+      <div style={{ padding: '20px 24px 0', textAlign: 'center', flexShrink: 0 }}>
         <p
           style={{
             fontSize: '11px',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            color: 'var(--color-muted-foreground)',
+            color: '#9A9A9A',
             marginBottom: '6px',
+            fontWeight: 500,
           }}
         >
           {album.title}
@@ -87,24 +111,18 @@ export default function Lyrics() {
         <h1
           style={{
             fontSize: '20px',
-            fontWeight: 700,
+            fontWeight: 600,
             letterSpacing: '-0.01em',
-            color: 'var(--color-foreground)',
+            color: '#1A1A1A',
             lineHeight: 1.25,
           }}
         >
-          {currentTrack.title}
+          {updatedTrack.title}
         </h1>
       </div>
 
       {/* Lyrics area */}
-      <div
-        style={{
-          flex: 1,
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
+      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentTrackId}
@@ -117,23 +135,50 @@ export default function Lyrics() {
               position: 'absolute',
               inset: 0,
               overflowY: 'auto',
-              padding: '24px 24px 24px',
+              padding: '24px',
             }}
           >
-            {currentTrack.lyrics ? (
+            {/* Loading state */}
+            {fetchState === 'loading' && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '40vh',
+                  gap: '12px',
+                }}
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                >
+                  <Loader2 size={20} strokeWidth={1.5} style={{ color: '#9A9A9A' }} />
+                </motion.div>
+                <p style={{ color: '#9A9A9A', fontSize: '14px', fontWeight: 300 }}>Fetching lyrics…</p>
+              </div>
+            )}
+
+            {/* Lyrics found */}
+            {fetchState === 'done' && updatedTrack.lyrics && (
               <p
                 style={{
                   fontSize: '16px',
                   lineHeight: 'var(--leading-loose)',
-                  color: 'var(--color-foreground)',
+                  color: '#1A1A1A',
                   whiteSpace: 'pre-wrap',
                   maxWidth: '68ch',
                   margin: '0 auto',
+                  fontWeight: 300,
                 }}
               >
-                {currentTrack.lyrics}
+                {updatedTrack.lyrics}
               </p>
-            ) : (
+            )}
+
+            {/* Lyrics unavailable */}
+            {fetchState === 'done' && !updatedTrack.lyrics && (
               <div
                 style={{
                   display: 'flex',
@@ -144,14 +189,14 @@ export default function Lyrics() {
                   gap: '8px',
                 }}
               >
-                <p style={{ color: 'var(--color-muted-foreground)', fontSize: '14px' }}>
-                  No lyrics for this track
+                <p style={{ color: '#9A9A9A', fontSize: '14px', fontWeight: 300 }}>
+                  Lyrics not available
                 </p>
                 <span
-                  style={{ color: 'var(--color-primary)', fontSize: '13px', cursor: 'pointer' }}
+                  style={{ color: '#1A1A1A', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
                   onClick={() => navigate(`/album/${albumId}/edit`)}
                 >
-                  Add lyrics
+                  Add manually
                 </span>
               </div>
             )}
@@ -168,8 +213,8 @@ export default function Lyrics() {
           justifyContent: 'space-between',
           padding: '16px 24px',
           paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-          borderTop: '1px solid var(--color-border)',
-          background: 'rgba(15, 13, 8, 0.9)',
+          borderTop: '1px solid rgba(0,0,0,0.06)',
+          background: 'rgba(239,239,239,0.9)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
         }}
@@ -184,29 +229,20 @@ export default function Lyrics() {
             justifyContent: 'center',
             width: 44,
             height: 44,
-            borderRadius: '50%',
-            background: currentIndex === 0 ? 'transparent' : 'var(--color-secondary)',
-            color: currentIndex === 0 ? 'var(--color-border)' : 'var(--color-foreground)',
-            border: '1px solid var(--color-border)',
-            opacity: currentIndex === 0 ? 0.3 : 1,
+            borderRadius: '999px',
+            background: currentIndex === 0 ? 'transparent' : '#E5E5E5',
+            color: currentIndex === 0 ? 'rgba(0,0,0,0.2)' : '#9A9A9A',
+            opacity: currentIndex === 0 ? 0.4 : 1,
             transition: 'opacity 0.2s',
           }}
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={20} strokeWidth={1.5} />
         </motion.button>
 
-        {/* Track position indicator */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-          <span
-            style={{
-              fontSize: '13px',
-              color: 'var(--color-muted-foreground)',
-              letterSpacing: '0.04em',
-            }}
-          >
+          <span style={{ fontSize: '13px', color: '#9A9A9A', fontWeight: 300 }}>
             {currentIndex + 1} / {tracks.length}
           </span>
-          {/* Dot indicators (max 7 shown) */}
           {tracks.length <= 12 && (
             <div style={{ display: 'flex', gap: '4px' }}>
               {tracks.map((_, i) => (
@@ -214,16 +250,10 @@ export default function Lyrics() {
                   key={i}
                   animate={{
                     width: i === currentIndex ? 16 : 4,
-                    backgroundColor: i === currentIndex
-                      ? 'var(--color-primary)'
-                      : 'var(--color-border)',
+                    backgroundColor: i === currentIndex ? '#1A1A1A' : 'rgba(0,0,0,0.15)',
                   }}
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                  style={{
-                    height: 4,
-                    borderRadius: 2,
-                    cursor: 'pointer',
-                  }}
+                  style={{ height: 4, borderRadius: 2, cursor: 'pointer' }}
                   onClick={() => goTo(i, i > currentIndex ? 1 : -1)}
                 />
               ))}
@@ -241,15 +271,14 @@ export default function Lyrics() {
             justifyContent: 'center',
             width: 44,
             height: 44,
-            borderRadius: '50%',
-            background: currentIndex === tracks.length - 1 ? 'transparent' : 'var(--color-secondary)',
-            color: currentIndex === tracks.length - 1 ? 'var(--color-border)' : 'var(--color-foreground)',
-            border: '1px solid var(--color-border)',
-            opacity: currentIndex === tracks.length - 1 ? 0.3 : 1,
+            borderRadius: '999px',
+            background: currentIndex === tracks.length - 1 ? 'transparent' : '#E5E5E5',
+            color: currentIndex === tracks.length - 1 ? 'rgba(0,0,0,0.2)' : '#9A9A9A',
+            opacity: currentIndex === tracks.length - 1 ? 0.4 : 1,
             transition: 'opacity 0.2s',
           }}
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={20} strokeWidth={1.5} />
         </motion.button>
       </div>
     </div>
