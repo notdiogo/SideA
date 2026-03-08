@@ -3,8 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2, Search, Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
-import { generateId } from '../store/collection'
-import { getById } from '../store/collection'
 import ImageUpload from '../components/forms/ImageUpload'
 import TrackListEditor from '../components/forms/TrackListEditor'
 import PageTransition from '../components/layout/PageTransition'
@@ -247,7 +245,7 @@ function AutoFillPanel({ onConfirm }) {
 export default function AddRecord() {
   const navigate = useNavigate()
   const { albumId } = useParams()
-  const { addAlbum, updateAlbum } = useCollectionContext()
+  const { albums, addAlbum, updateAlbum } = useCollectionContext()
   const isEditing = Boolean(albumId)
 
   const [mode, setMode] = useState(isEditing ? 'manual' : 'autofill')
@@ -265,7 +263,7 @@ export default function AddRecord() {
 
   useEffect(() => {
     if (isEditing) {
-      const album = getById(albumId)
+      const album = albums.find(a => a.id === albumId)
       if (album) {
         setForm({
           title: album.title,
@@ -276,7 +274,7 @@ export default function AddRecord() {
         })
       }
     }
-  }, [albumId, isEditing])
+  }, [albumId, isEditing, albums])
 
   const set = (field) => (value) => setForm(f => ({ ...f, [field]: value }))
   const setInput = (field) => (e) => set(field)(e.target.value)
@@ -316,10 +314,10 @@ export default function AddRecord() {
     }
 
     if (isEditing) {
-      updateAlbum({ id: albumId, ...albumData })
+      await updateAlbum({ id: albumId, ...albumData })
       navigate(`/album/${albumId}`)
     } else {
-      const album = addAlbum(albumData)
+      const album = await addAlbum(albumData)
       navigate(`/album/${album.id}`)
     }
   }

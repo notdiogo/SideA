@@ -43,8 +43,8 @@ export default function AlbumDetail() {
 
   if (!album) return null
 
-  const handleDelete = () => {
-    removeAlbum(albumId)
+  const handleDelete = async () => {
+    await removeAlbum(albumId)
     navigate('/')
   }
 

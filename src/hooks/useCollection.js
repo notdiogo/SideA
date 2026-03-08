@@ -1,31 +1,40 @@
 import { useState, useCallback, useEffect } from 'react'
-import * as store from '../store/collection'
+import * as store from '../store/supabaseCollection'
 
-export function useCollection() {
-  const [albums, setAlbums] = useState(() => store.getAll())
+export function useCollection(user) {
+  const [albums, setAlbums] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const handler = () => setAlbums(store.getAll())
-    window.addEventListener('storage', handler)
-    return () => window.removeEventListener('storage', handler)
-  }, [])
+    if (!user) {
+      setAlbums([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    store.getAll()
+      .then(data => setAlbums(data))
+      .catch(() => setAlbums([]))
+      .finally(() => setLoading(false))
+  }, [user])
 
-  const addAlbum = useCallback((albumData) => {
+  const addAlbum = useCallback(async (albumData) => {
     const album = { id: store.generateId(), ...albumData }
-    store.save(album)
-    setAlbums(store.getAll())
-    return album
+    const saved = await store.save(album)
+    setAlbums(prev => [saved, ...prev])
+    return saved
   }, [])
 
-  const updateAlbum = useCallback((album) => {
-    store.save(album)
-    setAlbums(store.getAll())
+  const updateAlbum = useCallback(async (album) => {
+    const saved = await store.save(album)
+    setAlbums(prev => prev.map(a => a.id === saved.id ? saved : a))
+    return saved
   }, [])
 
-  const removeAlbum = useCallback((id) => {
-    store.remove(id)
+  const removeAlbum = useCallback(async (id) => {
+    await store.remove(id)
     setAlbums(prev => prev.filter(a => a.id !== id))
   }, [])
 
-  return { albums, addAlbum, updateAlbum, removeAlbum }
+  return { albums, loading, addAlbum, updateAlbum, removeAlbum }
 }
