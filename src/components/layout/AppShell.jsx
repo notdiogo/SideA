@@ -1,20 +1,16 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Plus } from 'lucide-react'
 import { motion } from 'framer-motion'
-import GrainOverlay from '../ui/GrainOverlay'
 
 export default function AppShell({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const isHome = location.pathname === '/'
-  const isAdd = location.pathname === '/add' || location.pathname.endsWith('/edit')
 
-  // Derive page title from route
   const getTitle = () => {
-    if (isHome) return null // shows logotype
     if (location.pathname === '/add') return 'Add Record'
     if (location.pathname.endsWith('/edit')) return 'Edit Record'
-    return null // album/lyrics pages handle their own titles
+    return null
   }
 
   const title = getTitle()
@@ -34,30 +30,31 @@ export default function AppShell({ children }) {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 16px',
-          background: 'rgba(15, 13, 8, 0.85)',
+          background: 'rgba(239, 239, 239, 0.9)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(46, 42, 31, 0.5)',
         }}
       >
         {/* Left: back button */}
-        <div style={{ width: 40, display: 'flex', alignItems: 'center' }}>
+        <div style={{ minWidth: 80, display: 'flex', alignItems: 'center' }}>
           {!isHome && (
             <motion.button
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate(-1)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                color: 'var(--color-primary)',
-                background: 'transparent',
+                gap: '2px',
+                padding: '6px 14px 6px 10px',
+                borderRadius: '999px',
+                background: '#E5E5E5',
+                color: '#9A9A9A',
+                fontSize: '14px',
+                fontWeight: 500,
               }}
             >
-              <ChevronLeft size={22} />
+              <ChevronLeft size={16} strokeWidth={1.5} />
+              Back
             </motion.button>
           )}
         </div>
@@ -67,11 +64,10 @@ export default function AppShell({ children }) {
           {isHome ? (
             <span
               style={{
-                fontSize: '13px',
+                fontSize: '16px',
                 fontWeight: 600,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                color: 'var(--color-primary)',
+                color: '#1A1A1A',
+                letterSpacing: '-0.01em',
               }}
             >
               Side A
@@ -79,10 +75,9 @@ export default function AppShell({ children }) {
           ) : title ? (
             <span
               style={{
-                fontSize: '14px',
+                fontSize: '15px',
                 fontWeight: 500,
-                letterSpacing: '0.04em',
-                color: 'var(--color-foreground)',
+                color: '#1A1A1A',
               }}
             >
               {title}
@@ -91,10 +86,10 @@ export default function AppShell({ children }) {
         </div>
 
         {/* Right: add button on home */}
-        <div style={{ width: 40, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+        <div style={{ minWidth: 80, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
           {isHome && (
             <motion.button
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/add')}
               style={{
                 display: 'flex',
@@ -102,19 +97,16 @@ export default function AppShell({ children }) {
                 justifyContent: 'center',
                 width: 36,
                 height: 36,
-                borderRadius: '50%',
-                background: 'var(--color-primary)',
-                color: 'var(--color-primary-foreground)',
+                borderRadius: '999px',
+                background: '#1A1A1A',
+                color: '#FFFFFF',
               }}
             >
-              <Plus size={18} />
+              <Plus size={18} strokeWidth={1.5} />
             </motion.button>
           )}
         </div>
       </header>
-
-      {/* Grain overlay */}
-      <GrainOverlay />
 
       {/* Page content */}
       <main

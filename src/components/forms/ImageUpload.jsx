@@ -75,11 +75,11 @@ export default function ImageUpload({ value, onChange }) {
           cursor: 'pointer',
           position: 'relative',
           border: isDragging
-            ? '2px solid var(--color-primary)'
-            : value ? 'none' : '2px dashed var(--color-border)',
-          background: value ? 'transparent' : 'var(--color-card)',
+            ? '2px solid #1A1A1A'
+            : value ? 'none' : '2px dashed rgba(0,0,0,0.15)',
+          background: value ? 'transparent' : '#FFFFFF',
           transition: 'border-color 0.2s',
-          boxShadow: value ? '0 0 40px rgba(212, 168, 67, 0.2), 0 8px 32px rgba(0,0,0,0.6)' : 'none',
+          boxShadow: value ? '0 8px 32px rgba(0,0,0,0.1)' : '0 2px 12px rgba(0,0,0,0.06)',
         }}
       >
         {value ? (
