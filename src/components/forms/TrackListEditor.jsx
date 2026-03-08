@@ -10,10 +10,10 @@ function TrackRow({ track, index, onChange, onDelete }) {
     <Reorder.Item value={track} id={track.id}>
       <div
         style={{
-          background: 'var(--color-card)',
-          borderRadius: '8px',
+          background: '#FFFFFF',
+          borderRadius: '12px',
           overflow: 'hidden',
-          border: '1px solid var(--color-border)',
+          boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
           marginBottom: '8px',
         }}
       >
@@ -103,7 +103,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               style={{ overflow: 'hidden' }}
             >
-              <div style={{ borderTop: '1px solid var(--color-border)', padding: '10px 12px' }}>
+              <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 12px' }}>
                 <textarea
                   value={track.lyrics}
                   onChange={(e) => onChange({ ...track, lyrics: e.target.value })}
@@ -174,7 +174,7 @@ export default function TrackListEditor({ tracks, onChange }) {
           width: '100%',
           padding: '10px 12px',
           borderRadius: '8px',
-          border: '1px dashed var(--color-border)',
+          border: '1px dashed rgba(0,0,0,0.15)',
           color: 'var(--color-muted-foreground)',
           fontSize: '14px',
           background: 'transparent',

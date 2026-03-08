@@ -4,15 +4,9 @@ import { useCollectionContext } from '../App'
 import EmptyState from '../components/ui/EmptyState'
 import PageTransition from '../components/layout/PageTransition'
 
-const containerVariants = {
-  animate: {
-    transition: { staggerChildren: 0.04, delayChildren: 0.05 },
-  },
-}
-
 const cardVariants = {
-  initial: { opacity: 0, y: 16, scale: 0.97 },
-  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+  initial: { opacity: 0, x: 20, scale: 0.96 },
+  animate: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
 }
 
 function AlbumCard({ album }) {
@@ -21,88 +15,97 @@ function AlbumCard({ album }) {
   return (
     <motion.div
       variants={cardVariants}
-      whileHover="hover"
-      onClick={() => navigate(`/album/${album.id}`)}
-      style={{
-        position: 'relative',
-        aspectRatio: '1 / 1',
-        borderRadius: '6px',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        background: 'var(--color-card)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-      }}
+      style={{ flexShrink: 0, width: 140 }}
     >
-      {/* Cover image */}
-      {album.coverImage ? (
-        <img
-          src={album.coverImage}
-          alt={album.title}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          loading="lazy"
-        />
-      ) : (
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--color-secondary)',
-          }}
-        >
-          <span style={{ fontSize: '2rem', opacity: 0.3 }}>♪</span>
+      {/* Card */}
+      <motion.div
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={() => navigate(`/album/${album.id}`)}
+        style={{
+          position: 'relative',
+          width: 140,
+          height: 140,
+          borderRadius: '18px',
+          overflow: 'hidden',
+          cursor: 'pointer',
+          background: '#E5E5E5',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+        }}
+      >
+        {album.coverImage ? (
+          <img
+            src={album.coverImage}
+            alt={album.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            loading="lazy"
+          />
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span style={{ fontSize: '2rem', opacity: 0.2 }}>♪</span>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Floor reflection */}
+      {album.coverImage && (
+        <div style={{ width: 140, height: 36, overflow: 'hidden', borderRadius: '0 0 4px 4px' }}>
+          <img
+            src={album.coverImage}
+            alt=""
+            aria-hidden="true"
+            style={{
+              width: '100%',
+              height: 140,
+              objectFit: 'cover',
+              transform: 'scaleY(-1)',
+              marginTop: -104,
+              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, transparent 100%)',
+            }}
+          />
         </div>
       )}
 
-      {/* Hover overlay */}
-      <motion.div
-        initial={{ y: '100%', opacity: 0 }}
-        variants={{
-          hover: { y: 0, opacity: 1, transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] } },
-        }}
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: '12px 10px 10px',
-          background: 'linear-gradient(to top, rgba(10,8,4,0.95) 0%, rgba(10,8,4,0.7) 60%, transparent 100%)',
-        }}
-      >
+      {/* Title / artist below */}
+      <div style={{ marginTop: album.coverImage ? 6 : 8, paddingLeft: 2 }}>
         <p
           style={{
-            fontSize: '12px',
+            fontSize: '13px',
             fontWeight: 600,
-            color: 'var(--color-foreground)',
+            color: '#1A1A1A',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            letterSpacing: '0.02em',
+            letterSpacing: '-0.01em',
           }}
         >
           {album.title}
         </p>
-        <p
-          style={{
-            fontSize: '11px',
-            color: 'var(--color-muted-foreground)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            marginTop: '2px',
-          }}
-        >
-          {album.artist}
-        </p>
-      </motion.div>
-
-      {/* Scale on hover */}
-      <motion.div
-        variants={{ hover: { scale: 1.04 } }}
-        style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-      />
+        {album.artist && (
+          <p
+            style={{
+              fontSize: '12px',
+              fontWeight: 300,
+              color: '#9A9A9A',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              marginTop: '2px',
+            }}
+          >
+            {album.artist}
+          </p>
+        )}
+      </div>
     </motion.div>
   )
 }
@@ -112,18 +115,22 @@ export default function Wall() {
 
   return (
     <PageTransition>
-      <div style={{ padding: '20px 16px 32px' }}>
+      <div style={{ padding: '24px 0 40px' }}>
         {albums.length === 0 ? (
           <EmptyState />
         ) : (
           <motion.div
-            variants={containerVariants}
             initial="initial"
             animate="animate"
+            transition={{ staggerChildren: 0.06 }}
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-              gap: '12px',
+              display: 'flex',
+              gap: '16px',
+              overflowX: 'auto',
+              padding: '8px 24px 20px',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              alignItems: 'flex-start',
             }}
           >
             <AnimatePresence>

@@ -1,23 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Edit3, Trash2, Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import PageTransition from '../components/layout/PageTransition'
-
-function getDominantColor(imgEl) {
-  try {
-    const canvas = document.createElement('canvas')
-    canvas.width = 1
-    canvas.height = 1
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(imgEl, 0, 0, 1, 1)
-    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
-    return `rgba(${r},${g},${b},0.35)`
-  } catch {
-    return 'rgba(212,168,67,0.15)'
-  }
-}
 
 const trackVariants = {
   initial: { opacity: 0, x: 20 },
@@ -28,13 +14,26 @@ const trackVariants = {
   }),
 }
 
+function VinylDisc({ size = 180 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 180 180" fill="none" aria-hidden="true">
+      <circle cx="90" cy="90" r="89" fill="#1C1C1E" />
+      <circle cx="90" cy="90" r="75" stroke="#2C2C2E" strokeWidth="1" />
+      <circle cx="90" cy="90" r="62" stroke="#2C2C2E" strokeWidth="1" />
+      <circle cx="90" cy="90" r="50" stroke="#2C2C2E" strokeWidth="1" />
+      <circle cx="90" cy="90" r="38" stroke="#2C2C2E" strokeWidth="1" />
+      <circle cx="90" cy="90" r="26" stroke="#2C2C2E" strokeWidth="1" />
+      <circle cx="90" cy="90" r="16" fill="#FFFFFF" />
+      <circle cx="90" cy="90" r="4" fill="#1C1C1E" />
+    </svg>
+  )
+}
+
 export default function AlbumDetail() {
   const { albumId } = useParams()
   const navigate = useNavigate()
   const { albums, removeAlbum } = useCollectionContext()
-  const [glowColor, setGlowColor] = useState('rgba(212,168,67,0.15)')
   const [showDelete, setShowDelete] = useState(false)
-  const imgRef = useRef(null)
 
   const album = albums.find(a => a.id === albumId)
 
@@ -43,12 +42,6 @@ export default function AlbumDetail() {
   }, [album, navigate])
 
   if (!album) return null
-
-  const handleImgLoad = () => {
-    if (imgRef.current) {
-      setGlowColor(getDominantColor(imgRef.current))
-    }
-  }
 
   const handleDelete = () => {
     removeAlbum(albumId)
@@ -60,47 +53,41 @@ export default function AlbumDetail() {
   return (
     <PageTransition>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* Cover section */}
-        <div style={{ position: 'relative' }}>
-          {/* Ambient glow */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '20%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '70%',
-              height: '60%',
-              background: `radial-gradient(ellipse at center, ${glowColor} 0%, transparent 70%)`,
-              pointerEvents: 'none',
-              zIndex: 0,
-              filter: 'blur(40px)',
-            }}
-          />
+        {/* Cover + vinyl section */}
+        <div style={{ padding: '32px 32px 0', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            {/* Vinyl disc behind the art */}
+            <div
+              style={{
+                position: 'absolute',
+                right: -28,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 0,
+              }}
+            >
+              <VinylDisc size={200} />
+            </div>
 
-          {/* Cover image */}
-          <div style={{ padding: '24px 32px 0', position: 'relative', zIndex: 1 }}>
+            {/* Album art */}
             <motion.div
               initial={{ scale: 0.92, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: '100%',
-                maxWidth: '280px',
-                margin: '0 auto',
-                aspectRatio: '1 / 1',
-                borderRadius: '8px',
+                position: 'relative',
+                zIndex: 1,
+                width: 220,
+                height: 220,
+                borderRadius: '18px',
                 overflow: 'hidden',
-                boxShadow: '0 16px 48px rgba(0,0,0,0.7)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
               }}
             >
               {album.coverImage ? (
                 <img
-                  ref={imgRef}
                   src={album.coverImage}
                   alt={album.title}
-                  onLoad={handleImgLoad}
-                  crossOrigin="anonymous"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : (
@@ -111,13 +98,41 @@ export default function AlbumDetail() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'var(--color-secondary)',
+                    background: '#E5E5E5',
                   }}
                 >
-                  <Music size={48} strokeWidth={1} style={{ color: 'var(--color-border)' }} />
+                  <Music size={48} strokeWidth={1.5} style={{ color: '#9A9A9A' }} />
                 </div>
               )}
             </motion.div>
+
+            {/* Floor reflection */}
+            {album.coverImage && (
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  width: 220,
+                  height: 44,
+                  overflow: 'hidden',
+                }}
+              >
+                <img
+                  src={album.coverImage}
+                  alt=""
+                  aria-hidden="true"
+                  style={{
+                    width: '100%',
+                    height: 220,
+                    objectFit: 'cover',
+                    transform: 'scaleY(-1)',
+                    marginTop: -176,
+                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, transparent 100%)',
+                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, transparent 100%)',
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -126,89 +141,68 @@ export default function AlbumDetail() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          style={{ padding: '20px 24px 0', textAlign: 'center', position: 'relative' }}
+          style={{ padding: '20px 24px 0', textAlign: 'center' }}
         >
           {album.artist && (
-            <p
-              style={{
-                fontSize: '11px',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: 'var(--color-muted-foreground)',
-                marginBottom: '6px',
-              }}
-            >
+            <p style={{ fontSize: '13px', fontWeight: 300, color: '#9A9A9A', marginBottom: '4px' }}>
               {album.artist}
             </p>
           )}
           <h1
             style={{
               fontSize: '24px',
-              fontWeight: 700,
+              fontWeight: 600,
               letterSpacing: '-0.02em',
-              color: 'var(--color-foreground)',
+              color: '#1A1A1A',
               lineHeight: 1.2,
             }}
           >
             {album.title}
           </h1>
           {album.year && (
-            <p
-              style={{
-                fontSize: '13px',
-                color: 'var(--color-muted-foreground)',
-                marginTop: '6px',
-              }}
-            >
+            <p style={{ fontSize: '13px', color: '#9A9A9A', fontWeight: 300, marginTop: '4px' }}>
               {album.year}
             </p>
           )}
 
-          {/* Action buttons */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '12px',
-              marginTop: '16px',
-            }}
-          >
+          {/* Action pill buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '16px' }}>
             <motion.button
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate(`/album/${albumId}/edit`)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                background: 'var(--color-secondary)',
-                color: 'var(--color-foreground)',
+                padding: '8px 18px',
+                borderRadius: '999px',
+                background: '#E5E5E5',
+                color: '#9A9A9A',
                 fontSize: '13px',
-                border: '1px solid var(--color-border)',
+                fontWeight: 500,
               }}
             >
-              <Edit3 size={14} />
+              <Edit3 size={13} strokeWidth={1.5} />
               Edit
             </motion.button>
 
             <motion.button
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowDelete(v => !v)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                background: 'var(--color-secondary)',
-                color: showDelete ? 'var(--color-destructive)' : 'var(--color-muted-foreground)',
+                padding: '8px 18px',
+                borderRadius: '999px',
+                background: showDelete ? 'oklch(55% 0.18 25)' : '#E5E5E5',
+                color: showDelete ? '#FFFFFF' : '#9A9A9A',
                 fontSize: '13px',
-                border: `1px solid ${showDelete ? 'var(--color-destructive)' : 'var(--color-border)'}`,
-                transition: 'color 0.2s, border-color 0.2s',
+                fontWeight: 500,
+                transition: 'background 0.2s, color 0.2s',
               }}
             >
-              <Trash2 size={14} />
+              <Trash2 size={13} strokeWidth={1.5} />
               Delete
             </motion.button>
           </div>
@@ -225,17 +219,17 @@ export default function AlbumDetail() {
               >
                 <div
                   style={{
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    background: 'var(--color-card)',
-                    border: '1px solid var(--color-border)',
+                    padding: '16px',
+                    borderRadius: '16px',
+                    background: '#FFFFFF',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '10px',
+                    gap: '12px',
                   }}
                 >
-                  <p style={{ fontSize: '13px', color: 'var(--color-muted-foreground)' }}>
-                    Remove <strong style={{ color: 'var(--color-foreground)' }}>{album.title}</strong> from your collection?
+                  <p style={{ fontSize: '13px', color: '#9A9A9A', fontWeight: 300 }}>
+                    Remove <strong style={{ color: '#1A1A1A', fontWeight: 600 }}>{album.title}</strong> from your collection?
                   </p>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <motion.button
@@ -243,9 +237,9 @@ export default function AlbumDetail() {
                       onClick={handleDelete}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: '6px',
-                        background: 'var(--color-destructive)',
+                        padding: '9px',
+                        borderRadius: '10px',
+                        background: 'oklch(55% 0.18 25)',
                         color: 'white',
                         fontSize: '13px',
                         fontWeight: 500,
@@ -258,12 +252,12 @@ export default function AlbumDetail() {
                       onClick={() => setShowDelete(false)}
                       style={{
                         flex: 1,
-                        padding: '8px',
-                        borderRadius: '6px',
-                        background: 'var(--color-secondary)',
-                        color: 'var(--color-foreground)',
+                        padding: '9px',
+                        borderRadius: '10px',
+                        background: '#E5E5E5',
+                        color: '#1A1A1A',
                         fontSize: '13px',
-                        border: '1px solid var(--color-border)',
+                        fontWeight: 500,
                       }}
                     >
                       Cancel
@@ -281,9 +275,10 @@ export default function AlbumDetail() {
             <p
               style={{
                 fontSize: '11px',
-                letterSpacing: '0.12em',
+                fontWeight: 500,
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                color: 'var(--color-muted-foreground)',
+                color: '#9A9A9A',
                 padding: '0 24px',
                 marginBottom: '4px',
               }}
@@ -298,7 +293,7 @@ export default function AlbumDetail() {
                   variants={trackVariants}
                   initial="initial"
                   animate="animate"
-                  whileTap={{ backgroundColor: 'var(--color-secondary)' }}
+                  whileTap={{ backgroundColor: '#F5F5F5' }}
                   onClick={() => navigate(`/album/${albumId}/track/${track.id}`)}
                   style={{
                     display: 'flex',
@@ -307,28 +302,21 @@ export default function AlbumDetail() {
                     width: '100%',
                     padding: '14px 24px',
                     background: 'transparent',
-                    borderTop: i === 0 ? '1px solid var(--color-border)' : 'none',
-                    borderBottom: '1px solid var(--color-border)',
+                    borderBottom: '1px solid rgba(0,0,0,0.06)',
+                    borderTop: i === 0 ? '1px solid rgba(0,0,0,0.06)' : 'none',
                     textAlign: 'left',
                     cursor: 'pointer',
                     transition: 'background 0.15s',
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: '13px',
-                      color: 'var(--color-muted-foreground)',
-                      width: '24px',
-                      flexShrink: 0,
-                      textAlign: 'center',
-                    }}
-                  >
+                  <span style={{ fontSize: '13px', color: '#9A9A9A', fontWeight: 300, width: '24px', flexShrink: 0, textAlign: 'center' }}>
                     {i + 1}
                   </span>
                   <span
                     style={{
                       fontSize: '15px',
-                      color: 'var(--color-foreground)',
+                      fontWeight: 400,
+                      color: '#1A1A1A',
                       flex: 1,
                       minWidth: 0,
                       overflow: 'hidden',
@@ -338,7 +326,7 @@ export default function AlbumDetail() {
                   >
                     {track.title || 'Untitled'}
                   </span>
-                  <span style={{ color: 'var(--color-border)', fontSize: '18px' }}>›</span>
+                  <span style={{ color: '#C7C7CC', fontSize: '18px' }}>›</span>
                 </motion.button>
               ))}
             </div>
@@ -347,10 +335,10 @@ export default function AlbumDetail() {
 
         {tracks.length === 0 && (
           <div style={{ padding: '40px 24px', textAlign: 'center' }}>
-            <p style={{ color: 'var(--color-muted-foreground)', fontSize: '14px' }}>
+            <p style={{ color: '#9A9A9A', fontSize: '14px', fontWeight: 300 }}>
               No tracks added yet.{' '}
               <span
-                style={{ color: 'var(--color-primary)', cursor: 'pointer' }}
+                style={{ color: '#1A1A1A', fontWeight: 500, cursor: 'pointer' }}
                 onClick={() => navigate(`/album/${albumId}/edit`)}
               >
                 Edit to add tracks

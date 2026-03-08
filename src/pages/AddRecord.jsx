@@ -11,13 +11,13 @@ import PageTransition from '../components/layout/PageTransition'
 const inputStyle = {
   width: '100%',
   padding: '12px 14px',
-  background: 'var(--color-card)',
-  border: '1px solid var(--color-border)',
-  borderRadius: '8px',
-  color: 'var(--color-foreground)',
+  background: '#FFFFFF',
+  border: 'none',
+  borderRadius: '12px',
+  color: '#1A1A1A',
   fontSize: '15px',
   outline: 'none',
-  transition: 'border-color 0.2s',
+  boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
 }
 
 function Field({ label, error, children }) {
@@ -121,7 +121,7 @@ export default function AddRecord() {
             <input
               style={{
                 ...inputStyle,
-                borderColor: errors.title ? 'var(--color-destructive)' : 'var(--color-border)',
+                boxShadow: errors.title ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)',
               }}
               value={form.title}
               onChange={setInput('title')}
@@ -133,7 +133,7 @@ export default function AddRecord() {
             <input
               style={{
                 ...inputStyle,
-                borderColor: errors.artist ? 'var(--color-destructive)' : 'var(--color-border)',
+                boxShadow: errors.artist ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)',
               }}
               value={form.artist}
               onChange={setInput('artist')}
@@ -145,7 +145,7 @@ export default function AddRecord() {
             <input
               style={{
                 ...inputStyle,
-                borderColor: errors.year ? 'var(--color-destructive)' : 'var(--color-border)',
+                boxShadow: errors.year ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)',
               }}
               value={form.year}
               onChange={setInput('year')}
@@ -184,14 +184,13 @@ export default function AddRecord() {
           style={{
             width: '100%',
             padding: '14px',
-            borderRadius: '10px',
-            background: 'var(--color-primary)',
-            color: 'var(--color-primary-foreground)',
+            borderRadius: '14px',
+            background: '#1A1A1A',
+            color: '#FFFFFF',
             fontSize: '15px',
             fontWeight: 600,
-            letterSpacing: '0.02em',
             cursor: saving ? 'wait' : 'pointer',
-            opacity: saving ? 0.7 : 1,
+            opacity: saving ? 0.6 : 1,
             transition: 'opacity 0.2s',
           }}
         >
