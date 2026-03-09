@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { Reorder, motion, AnimatePresence } from 'framer-motion'
+import { Reorder, motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus } from 'lucide-react'
 import { generateId } from '@/store/collection'
 
 function TrackRow({ track, index, onChange, onDelete }) {
   const [expanded, setExpanded] = useState(false)
+  const dragControls = useDragControls()
 
   return (
-    <Reorder.Item value={track} id={track.id}>
+    <Reorder.Item value={track} id={track.id} dragControls={dragControls} dragListener={false}>
       <div
         style={{
           background: '#FFFFFF',
@@ -27,13 +28,12 @@ function TrackRow({ track, index, onChange, onDelete }) {
           }}
         >
           {/* Drag handle */}
-          <Reorder.Item
-            value={track}
-            as="div"
+          <div
+            onPointerDown={(e) => dragControls.start(e)}
             style={{ cursor: 'grab', touchAction: 'none', color: 'var(--color-muted-foreground)', flexShrink: 0 }}
           >
             <GripVertical size={16} />
-          </Reorder.Item>
+          </div>
 
           {/* Track number */}
           <span
@@ -66,6 +66,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
 
           {/* Lyrics toggle */}
           <motion.button
+            type="button"
             whileTap={{ scale: 0.9 }}
             onClick={() => setExpanded(v => !v)}
             style={{
@@ -80,6 +81,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
 
           {/* Delete */}
           <motion.button
+            type="button"
             whileTap={{ scale: 0.9 }}
             onClick={() => onDelete(track.id)}
             style={{

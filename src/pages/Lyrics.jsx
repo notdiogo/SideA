@@ -50,7 +50,6 @@ export default function Lyrics() {
     setFetchState('loading')
     fetchLyrics(album.artist, currentTrack.title).then(text => {
       if (text) {
-        // Persist to localStorage via updateAlbum
         updateAlbum({
           ...album,
           tracks: album.tracks.map(t =>
@@ -84,13 +83,16 @@ export default function Lyrics() {
   // The track lyrics — may have been updated in context after fetch
   const updatedTrack = tracks.find(t => t.id === currentTrackId) ?? currentTrack
 
+  const isPrevDisabled = currentIndex === 0
+  const isNextDisabled = currentIndex === tracks.length - 1
+
   return (
     <div
       style={{
-        minHeight: 'calc(100dvh - var(--nav-height))',
-        display: 'flex',
+        minHeight:     'calc(100dvh - var(--nav-height))',
+        display:       'flex',
         flexDirection: 'column',
-        background: 'var(--color-background)',
+        background:    'var(--color-background)',
       }}
       {...swipeHandlers}
     >
@@ -98,23 +100,23 @@ export default function Lyrics() {
       <div style={{ padding: '20px 24px 0', textAlign: 'center', flexShrink: 0 }}>
         <p
           style={{
-            fontSize: '11px',
+            fontSize:      '11px',
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            color: '#9A9A9A',
-            marginBottom: '6px',
-            fontWeight: 500,
+            color:          'var(--color-muted-foreground)',
+            marginBottom:  '6px',
+            fontWeight:     500,
           }}
         >
           {album.title}
         </p>
         <h1
           style={{
-            fontSize: '20px',
-            fontWeight: 600,
+            fontSize:      '20px',
+            fontWeight:     600,
             letterSpacing: '-0.01em',
-            color: '#1A1A1A',
-            lineHeight: 1.25,
+            color:          'var(--color-foreground)',
+            lineHeight:     1.25,
           }}
         >
           {updatedTrack.title}
@@ -132,31 +134,31 @@ export default function Lyrics() {
             animate="animate"
             exit="exit"
             style={{
-              position: 'absolute',
-              inset: 0,
+              position:  'absolute',
+              inset:      0,
               overflowY: 'auto',
-              padding: '24px',
+              padding:   '24px',
             }}
           >
             {/* Loading state */}
             {fetchState === 'loading' && (
               <div
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
+                  display:        'flex',
+                  flexDirection:  'column',
+                  alignItems:     'center',
                   justifyContent: 'center',
-                  height: '40vh',
-                  gap: '12px',
+                  height:         '40vh',
+                  gap:            '12px',
                 }}
               >
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 >
-                  <Loader2 size={20} strokeWidth={1.5} style={{ color: '#9A9A9A' }} />
+                  <Loader2 size={20} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
                 </motion.div>
-                <p style={{ color: '#9A9A9A', fontSize: '14px', fontWeight: 300 }}>Fetching lyrics…</p>
+                <p style={{ color: 'var(--color-muted-foreground)', fontSize: '14px', fontWeight: 300 }}>Fetching lyrics…</p>
               </div>
             )}
 
@@ -164,13 +166,13 @@ export default function Lyrics() {
             {fetchState === 'done' && updatedTrack.lyrics && (
               <p
                 style={{
-                  fontSize: '16px',
+                  fontSize:   '16px',
                   lineHeight: 'var(--leading-loose)',
-                  color: '#1A1A1A',
+                  color:      'var(--color-foreground)',
                   whiteSpace: 'pre-wrap',
-                  maxWidth: '68ch',
-                  margin: '0 auto',
-                  fontWeight: 300,
+                  maxWidth:   '68ch',
+                  margin:     '0 auto',
+                  fontWeight:  300,
                 }}
               >
                 {updatedTrack.lyrics}
@@ -181,19 +183,19 @@ export default function Lyrics() {
             {fetchState === 'done' && !updatedTrack.lyrics && (
               <div
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
+                  display:        'flex',
+                  flexDirection:  'column',
+                  alignItems:     'center',
                   justifyContent: 'center',
-                  height: '40vh',
-                  gap: '8px',
+                  height:         '40vh',
+                  gap:            '8px',
                 }}
               >
-                <p style={{ color: '#9A9A9A', fontSize: '14px', fontWeight: 300 }}>
+                <p style={{ color: 'var(--color-muted-foreground)', fontSize: '14px', fontWeight: 300 }}>
                   Lyrics not available
                 </p>
                 <span
-                  style={{ color: '#1A1A1A', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
+                  style={{ color: 'var(--color-foreground)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
                   onClick={() => navigate(`/album/${albumId}/edit`)}
                 >
                   Add manually
@@ -207,40 +209,40 @@ export default function Lyrics() {
       {/* Navigation bar */}
       <div
         style={{
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '16px 24px',
-          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-          borderTop: '1px solid rgba(0,0,0,0.06)',
-          background: 'rgba(239,239,239,0.9)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          flexShrink:          0,
+          display:             'flex',
+          alignItems:          'center',
+          justifyContent:      'space-between',
+          padding:             '16px 24px',
+          paddingBottom:       'max(16px, env(safe-area-inset-bottom))',
+          borderTop:           '1px solid var(--color-border)',
+          background:          'var(--color-nav-bg)',
+          backdropFilter:      'blur(20px)',
+          WebkitBackdropFilter:'blur(20px)',
         }}
       >
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={goPrev}
-          disabled={currentIndex === 0}
+          disabled={isPrevDisabled}
           style={{
-            display: 'flex',
-            alignItems: 'center',
+            display:        'flex',
+            alignItems:     'center',
             justifyContent: 'center',
-            width: 44,
-            height: 44,
-            borderRadius: '999px',
-            background: currentIndex === 0 ? 'transparent' : '#E5E5E5',
-            color: currentIndex === 0 ? 'rgba(0,0,0,0.2)' : '#9A9A9A',
-            opacity: currentIndex === 0 ? 0.4 : 1,
-            transition: 'opacity 0.2s',
+            width:           44,
+            height:          44,
+            borderRadius:   '999px',
+            background:     isPrevDisabled ? 'transparent' : 'var(--color-secondary)',
+            color:          'var(--color-muted-foreground)',
+            opacity:         isPrevDisabled ? 0.35 : 1,
+            transition:     'opacity 0.2s',
           }}
         >
           <ChevronLeft size={20} strokeWidth={1.5} />
         </motion.button>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '13px', color: '#9A9A9A', fontWeight: 300 }}>
+          <span style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300 }}>
             {currentIndex + 1} / {tracks.length}
           </span>
           {tracks.length <= 12 && (
@@ -249,11 +251,11 @@ export default function Lyrics() {
                 <motion.div
                   key={i}
                   animate={{
-                    width: i === currentIndex ? 16 : 4,
-                    backgroundColor: i === currentIndex ? '#1A1A1A' : 'rgba(0,0,0,0.15)',
+                    width:   i === currentIndex ? 16 : 4,
+                    opacity: i === currentIndex ? 1 : 0.25,
                   }}
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ height: 4, borderRadius: 2, cursor: 'pointer' }}
+                  style={{ height: 4, borderRadius: 2, cursor: 'pointer', backgroundColor: 'var(--color-foreground)' }}
                   onClick={() => goTo(i, i > currentIndex ? 1 : -1)}
                 />
               ))}
@@ -264,18 +266,18 @@ export default function Lyrics() {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={goNext}
-          disabled={currentIndex === tracks.length - 1}
+          disabled={isNextDisabled}
           style={{
-            display: 'flex',
-            alignItems: 'center',
+            display:        'flex',
+            alignItems:     'center',
             justifyContent: 'center',
-            width: 44,
-            height: 44,
-            borderRadius: '999px',
-            background: currentIndex === tracks.length - 1 ? 'transparent' : '#E5E5E5',
-            color: currentIndex === tracks.length - 1 ? 'rgba(0,0,0,0.2)' : '#9A9A9A',
-            opacity: currentIndex === tracks.length - 1 ? 0.4 : 1,
-            transition: 'opacity 0.2s',
+            width:           44,
+            height:          44,
+            borderRadius:   '999px',
+            background:     isNextDisabled ? 'transparent' : 'var(--color-secondary)',
+            color:          'var(--color-muted-foreground)',
+            opacity:         isNextDisabled ? 0.35 : 1,
+            transition:     'opacity 0.2s',
           }}
         >
           <ChevronRight size={20} strokeWidth={1.5} />

@@ -1,22 +1,16 @@
 import { useState, useCallback, useEffect } from 'react'
 import * as store from '../store/supabaseCollection'
 
-export function useCollection(user) {
+export function useCollection() {
   const [albums, setAlbums] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) {
-      setAlbums([])
-      setLoading(false)
-      return
-    }
-    setLoading(true)
     store.getAll()
       .then(data => setAlbums(data))
       .catch(() => setAlbums([]))
       .finally(() => setLoading(false))
-  }, [user])
+  }, [])
 
   const addAlbum = useCallback(async (albumData) => {
     const album = { id: store.generateId(), ...albumData }

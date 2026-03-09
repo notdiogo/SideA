@@ -38,6 +38,37 @@
   --leading-loose: 1.8;
 }
 
+/* ── Nav background token (not in @theme to support rgba) ── */
+:root {
+  --color-nav-bg: rgba(239, 239, 239, 0.9);
+}
+
+/* ── Dark theme overrides ── */
+html.dark {
+  --color-background:           #111111;
+  --color-foreground:           #EFEFEF;
+  --color-card:                 #1C1C1E;
+  --color-card-foreground:      #EFEFEF;
+  --color-popover:              #1C1C1E;
+  --color-popover-foreground:   #EFEFEF;
+  --color-primary:              #EFEFEF;
+  --color-primary-foreground:   #111111;
+  --color-secondary:            #2C2C2E;
+  --color-secondary-foreground: #8E8E93;
+  --color-muted:                #1C1C1E;
+  --color-muted-foreground:     #8E8E93;
+  --color-accent:               #3A3A3C;
+  --color-accent-foreground:    #EFEFEF;
+  --color-border:               rgba(255, 255, 255, 0.08);
+  --color-input:                #2C2C2E;
+  --color-ring:                 #EFEFEF;
+  --color-nav-bg:               rgba(17, 17, 17, 0.9);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
 /* ── Base Reset ── */
 *, *::before, *::after {
   box-sizing: border-box;
