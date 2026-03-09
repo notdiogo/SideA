@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Music } from 'lucide-react'
+import { Music, ChevronRight } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import EmptyState from '../components/ui/EmptyState'
 import PageTransition from '../components/layout/PageTransition'
@@ -37,7 +37,7 @@ const RENDER_R  = 3      // render ±3 slots (invisible beyond ±2)
 const VISIBLE_R = 2
 
 export default function Wall() {
-  const { albums, loading } = useCollectionContext()
+  const { albums, loading, viewMode } = useCollectionContext()
   const navigate = useNavigate()
   const cardSize = useCardSize()
   const [index, setIndex] = useState(0)
@@ -85,6 +85,94 @@ export default function Wall() {
     )
   }
 
+  // ── List view ─────────────────────────────────────────────────────────────
+  if (viewMode === 'list') {
+    return (
+      <PageTransition>
+        <div
+          style={{
+            overflowY: 'auto',
+            height:    'calc(100dvh - var(--nav-height))',
+          }}
+        >
+          {sorted.map(album => (
+            <button
+              key={album.id}
+              type="button"
+              onClick={() => navigate(`/album/${album.id}`)}
+              style={{
+                display:     'flex',
+                alignItems:  'center',
+                gap:          12,
+                width:       '100%',
+                padding:     '10px 16px',
+                borderBottom:'1px solid var(--color-border)',
+                background:  'none',
+                cursor:      'pointer',
+              }}
+            >
+              {/* Thumbnail */}
+              <div
+                style={{
+                  width:        52,
+                  height:       52,
+                  borderRadius:  8,
+                  overflow:     'hidden',
+                  flexShrink:    0,
+                  background:   'var(--color-secondary)',
+                  display:      'flex',
+                  alignItems:   'center',
+                  justifyContent:'center',
+                }}
+              >
+                {album.coverImage ? (
+                  <img
+                    src={album.coverImage}
+                    alt={album.title}
+                    draggable={false}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <Music size={18} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
+                )}
+              </div>
+
+              {/* Text */}
+              <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                <p style={{
+                  fontSize:     15,
+                  fontWeight:   500,
+                  color:       'var(--color-foreground)',
+                  overflow:    'hidden',
+                  textOverflow:'ellipsis',
+                  whiteSpace:  'nowrap',
+                }}>
+                  {album.title}
+                </p>
+                {album.artist && (
+                  <p style={{
+                    fontSize:     13,
+                    fontWeight:   300,
+                    color:       'var(--color-muted-foreground)',
+                    marginTop:    2,
+                    overflow:    'hidden',
+                    textOverflow:'ellipsis',
+                    whiteSpace:  'nowrap',
+                  }}>
+                    {album.artist}
+                  </p>
+                )}
+              </div>
+
+              <ChevronRight size={16} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)', flexShrink: 0 }} />
+            </button>
+          ))}
+        </div>
+      </PageTransition>
+    )
+  }
+
+  // ── Carousel view ──────────────────────────────────────────────────────────
   const current = sorted[index]
   const reflectionH = Math.round(cardSize * 0.18)
   const containerH  = cardSize + reflectionH
@@ -156,7 +244,7 @@ export default function Wall() {
                     height:       cardSize,
                     borderRadius: radius,
                     overflow:     'hidden',
-                    background:   '#E5E5E5',
+                    background:   'var(--color-secondary)',
                     boxShadow:    slot === 0
                       ? '0 20px 60px rgba(0,0,0,0.18)'
                       : '0 6px 20px rgba(0,0,0,0.08)',
@@ -182,7 +270,7 @@ export default function Wall() {
                       <Music
                         size={Math.round(cardSize * 0.18)}
                         strokeWidth={1.5}
-                        style={{ color: '#9A9A9A' }}
+                        style={{ color: 'var(--color-muted-foreground)' }}
                       />
                     </div>
                   )}
@@ -240,7 +328,7 @@ export default function Wall() {
               style={{
                 fontSize:      18,
                 fontWeight:    600,
-                color:         '#1A1A1A',
+                color:         'var(--color-foreground)',
                 letterSpacing: '-0.02em',
                 overflow:      'hidden',
                 textOverflow:  'ellipsis',
@@ -254,7 +342,7 @@ export default function Wall() {
                 style={{
                   fontSize:     14,
                   fontWeight:   300,
-                  color:        '#9A9A9A',
+                  color:        'var(--color-muted-foreground)',
                   marginTop:    4,
                   overflow:     'hidden',
                   textOverflow: 'ellipsis',
