@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Edit3, Trash2, Music } from 'lucide-react'
+import { MoreHorizontal, Edit3, Trash2, Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import PageTransition from '../components/layout/PageTransition'
 
@@ -33,7 +33,9 @@ export default function AlbumDetail() {
   const { albumId } = useParams()
   const navigate = useNavigate()
   const { albums, removeAlbum } = useCollectionContext()
+  const [showOptions, setShowOptions] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
+  const optionsRef = useRef(null)
 
   const album = albums.find(a => a.id === albumId)
 
@@ -41,9 +43,22 @@ export default function AlbumDetail() {
     if (!album) navigate('/', { replace: true })
   }, [album, navigate])
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!showOptions) return
+    const handler = (e) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target)) {
+        setShowOptions(false)
+      }
+    }
+    document.addEventListener('pointerdown', handler)
+    return () => document.removeEventListener('pointerdown', handler)
+  }, [showOptions])
+
   if (!album) return null
 
   const handleDelete = async () => {
+    setShowDelete(false)
     await removeAlbum(albumId)
     navigate('/')
   }
@@ -52,18 +67,101 @@ export default function AlbumDetail() {
 
   return (
     <PageTransition>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* Cover + vinyl section */}
+      <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
+
+        {/* ── Options button (top-right) ── */}
+        <div
+          ref={optionsRef}
+          style={{ position: 'absolute', top: 12, right: 16, zIndex: 20 }}
+        >
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.92 }}
+            onClick={() => setShowOptions(v => !v)}
+            style={{
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'center',
+              width:          36,
+              height:         36,
+              borderRadius:   '999px',
+              background:     showOptions ? '#E0E0E0' : '#E5E5E5',
+              color:          '#1A1A1A',
+            }}
+          >
+            <MoreHorizontal size={18} strokeWidth={1.75} />
+          </motion.button>
+
+          <AnimatePresence>
+            {showOptions && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.93, y: -4 }}
+                animate={{ opacity: 1, scale: 1,    y: 0  }}
+                exit={{    opacity: 0, scale: 0.93, y: -4 }}
+                transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  position:     'absolute',
+                  top:          'calc(100% + 6px)',
+                  right:         0,
+                  background:   '#FFFFFF',
+                  borderRadius:  14,
+                  boxShadow:    '0 4px 24px rgba(0,0,0,0.12)',
+                  overflow:     'hidden',
+                  minWidth:      140,
+                  transformOrigin: 'top right',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => { setShowOptions(false); navigate(`/album/${albumId}/edit`) }}
+                  style={{
+                    display:    'flex',
+                    alignItems: 'center',
+                    gap:         10,
+                    width:       '100%',
+                    padding:    '12px 16px',
+                    fontSize:    14,
+                    fontWeight:  400,
+                    color:      '#1A1A1A',
+                    borderBottom: '1px solid rgba(0,0,0,0.06)',
+                  }}
+                >
+                  <Edit3 size={14} strokeWidth={1.5} />
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowOptions(false); setShowDelete(true) }}
+                  style={{
+                    display:    'flex',
+                    alignItems: 'center',
+                    gap:         10,
+                    width:       '100%',
+                    padding:    '12px 16px',
+                    fontSize:    14,
+                    fontWeight:  400,
+                    color:      'oklch(55% 0.18 25)',
+                  }}
+                >
+                  <Trash2 size={14} strokeWidth={1.5} />
+                  Delete
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ── Cover + vinyl ── */}
         <div style={{ padding: '32px 32px 0', display: 'flex', justifyContent: 'center' }}>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             {/* Vinyl disc behind the art */}
             <div
               style={{
-                position: 'absolute',
-                right: -28,
-                top: 110,
+                position:  'absolute',
+                right:     -28,
+                top:        110,
                 transform: 'translateY(-50%)',
-                zIndex: 0,
+                zIndex:     0,
               }}
             >
               <VinylDisc size={200} />
@@ -72,16 +170,16 @@ export default function AlbumDetail() {
             {/* Album art */}
             <motion.div
               initial={{ scale: 0.92, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              animate={{ scale: 1,    opacity: 1 }}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                position: 'relative',
-                zIndex: 1,
-                width: 220,
-                height: 220,
+                position:     'relative',
+                zIndex:        1,
+                width:         220,
+                height:        220,
                 borderRadius: '18px',
-                overflow: 'hidden',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                overflow:     'hidden',
+                boxShadow:    '0 8px 32px rgba(0,0,0,0.12)',
               }}
             >
               {album.coverImage ? (
@@ -93,12 +191,12 @@ export default function AlbumDetail() {
               ) : (
                 <div
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
+                    width:          '100%',
+                    height:         '100%',
+                    display:        'flex',
+                    alignItems:     'center',
                     justifyContent: 'center',
-                    background: '#E5E5E5',
+                    background:     '#E5E5E5',
                   }}
                 >
                   <Music size={48} strokeWidth={1.5} style={{ color: '#9A9A9A' }} />
@@ -106,16 +204,16 @@ export default function AlbumDetail() {
               )}
             </motion.div>
 
-            {/* Floor reflection */}
+            {/* Floor reflection — vertical flip only, 10% → 0% opacity */}
             {album.coverImage && (
               <div
                 style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  width: 220,
-                  height: 44,
-                  overflow: 'hidden',
-                  borderRadius: '0 0 18px 18px',
+                  position:     'relative',
+                  zIndex:        1,
+                  width:         220,
+                  height:        44,
+                  overflow:     'hidden',
+                  borderRadius: '18px 18px 0 0',
                 }}
               >
                 <img
@@ -123,13 +221,13 @@ export default function AlbumDetail() {
                   alt=""
                   aria-hidden="true"
                   style={{
-                    width: '100%',
-                    height: 220,
-                    objectFit: 'cover',
-                    transform: 'scaleY(-1)',
-                    marginTop: -176,
-                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, transparent 100%)',
-                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, transparent 100%)',
+                    width:        '100%',
+                    height:        220,
+                    objectFit:    'cover',
+                    transform:    'scaleY(-1)',
+                    marginTop:    -176,
+                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
+                    maskImage:       'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
                   }}
                 />
               </div>
@@ -137,7 +235,7 @@ export default function AlbumDetail() {
           </div>
         </div>
 
-        {/* Metadata */}
+        {/* ── Metadata (title / artist / year — no action buttons) ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,11 +249,11 @@ export default function AlbumDetail() {
           )}
           <h1
             style={{
-              fontSize: '24px',
-              fontWeight: 600,
+              fontSize:      '24px',
+              fontWeight:     600,
               letterSpacing: '-0.02em',
-              color: '#1A1A1A',
-              lineHeight: 1.2,
+              color:         '#1A1A1A',
+              lineHeight:     1.2,
             }}
           >
             {album.title}
@@ -165,123 +263,20 @@ export default function AlbumDetail() {
               {album.year}
             </p>
           )}
-
-          {/* Action pill buttons */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '16px' }}>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate(`/album/${albumId}/edit`)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 18px',
-                borderRadius: '999px',
-                background: '#E5E5E5',
-                color: '#9A9A9A',
-                fontSize: '13px',
-                fontWeight: 500,
-              }}
-            >
-              <Edit3 size={13} strokeWidth={1.5} />
-              Edit
-            </motion.button>
-
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowDelete(v => !v)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 18px',
-                borderRadius: '999px',
-                background: showDelete ? 'oklch(55% 0.18 25)' : '#E5E5E5',
-                color: showDelete ? '#FFFFFF' : '#9A9A9A',
-                fontSize: '13px',
-                fontWeight: 500,
-                transition: 'background 0.2s, color 0.2s',
-              }}
-            >
-              <Trash2 size={13} strokeWidth={1.5} />
-              Delete
-            </motion.button>
-          </div>
-
-          {/* Delete confirm */}
-          <AnimatePresence>
-            {showDelete && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                style={{ overflow: 'hidden', marginTop: '12px' }}
-              >
-                <div
-                  style={{
-                    padding: '16px',
-                    borderRadius: '16px',
-                    background: '#FFFFFF',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                  }}
-                >
-                  <p style={{ fontSize: '13px', color: '#9A9A9A', fontWeight: 300 }}>
-                    Remove <strong style={{ color: '#1A1A1A', fontWeight: 600 }}>{album.title}</strong> from your collection?
-                  </p>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleDelete}
-                      style={{
-                        flex: 1,
-                        padding: '9px',
-                        borderRadius: '10px',
-                        background: 'oklch(55% 0.18 25)',
-                        color: 'white',
-                        fontSize: '13px',
-                        fontWeight: 500,
-                      }}
-                    >
-                      Remove
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowDelete(false)}
-                      style={{
-                        flex: 1,
-                        padding: '9px',
-                        borderRadius: '10px',
-                        background: '#E5E5E5',
-                        color: '#1A1A1A',
-                        fontSize: '13px',
-                        fontWeight: 500,
-                      }}
-                    >
-                      Cancel
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
 
-        {/* Track list */}
+        {/* ── Track list ── */}
         {tracks.length > 0 && (
           <div style={{ padding: '28px 0 48px' }}>
             <p
               style={{
-                fontSize: '11px',
-                fontWeight: 500,
+                fontSize:      '11px',
+                fontWeight:     500,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                color: '#9A9A9A',
-                padding: '0 24px',
-                marginBottom: '4px',
+                color:         '#9A9A9A',
+                padding:       '0 24px',
+                marginBottom:  '4px',
               }}
             >
               Tracks
@@ -290,6 +285,7 @@ export default function AlbumDetail() {
               {tracks.map((track, i) => (
                 <motion.button
                   key={track.id}
+                  type="button"
                   custom={i}
                   variants={trackVariants}
                   initial="initial"
@@ -297,17 +293,17 @@ export default function AlbumDetail() {
                   whileTap={{ backgroundColor: '#F5F5F5' }}
                   onClick={() => navigate(`/album/${albumId}/track/${track.id}`)}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    width: '100%',
-                    padding: '14px 24px',
-                    background: 'transparent',
+                    display:      'flex',
+                    alignItems:   'center',
+                    gap:           16,
+                    width:        '100%',
+                    padding:      '14px 24px',
+                    background:   'transparent',
                     borderBottom: '1px solid rgba(0,0,0,0.06)',
-                    borderTop: i === 0 ? '1px solid rgba(0,0,0,0.06)' : 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'background 0.15s',
+                    borderTop:     i === 0 ? '1px solid rgba(0,0,0,0.06)' : 'none',
+                    textAlign:    'left',
+                    cursor:       'pointer',
+                    transition:   'background 0.15s',
                   }}
                 >
                   <span style={{ fontSize: '13px', color: '#9A9A9A', fontWeight: 300, width: '24px', flexShrink: 0, textAlign: 'center' }}>
@@ -315,14 +311,14 @@ export default function AlbumDetail() {
                   </span>
                   <span
                     style={{
-                      fontSize: '15px',
-                      fontWeight: 400,
-                      color: '#1A1A1A',
-                      flex: 1,
-                      minWidth: 0,
-                      overflow: 'hidden',
+                      fontSize:     '15px',
+                      fontWeight:    400,
+                      color:        '#1A1A1A',
+                      flex:          1,
+                      minWidth:      0,
+                      overflow:     'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
+                      whiteSpace:   'nowrap',
                     }}
                   >
                     {track.title || 'Untitled'}
@@ -348,6 +344,84 @@ export default function AlbumDetail() {
           </div>
         )}
       </div>
+
+      {/* ── Delete confirmation bottom sheet ── */}
+      <AnimatePresence>
+        {showDelete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              position:       'fixed',
+              inset:           0,
+              background:     'rgba(0,0,0,0.28)',
+              zIndex:          50,
+              display:        'flex',
+              alignItems:     'flex-end',
+              padding:         16,
+            }}
+            onClick={() => setShowDelete(false)}
+          >
+            <motion.div
+              initial={{ y: 48 }}
+              animate={{ y: 0  }}
+              exit={{    y: 48 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                width:        '100%',
+                maxWidth:      440,
+                margin:       '0 auto',
+                background:   '#FFFFFF',
+                borderRadius:  24,
+                padding:      '24px 24px 28px',
+              }}
+            >
+              <p style={{ fontSize: '15px', color: '#9A9A9A', fontWeight: 300, lineHeight: 1.5, marginBottom: 20 }}>
+                Remove{' '}
+                <strong style={{ color: '#1A1A1A', fontWeight: 600 }}>{album.title}</strong>
+                {' '}from your collection?
+              </p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleDelete}
+                  style={{
+                    flex:         1,
+                    padding:     '12px',
+                    borderRadius: 14,
+                    background:  'oklch(55% 0.18 25)',
+                    color:       'white',
+                    fontSize:     14,
+                    fontWeight:   600,
+                  }}
+                >
+                  Remove
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setShowDelete(false)}
+                  style={{
+                    flex:         1,
+                    padding:     '12px',
+                    borderRadius: 14,
+                    background:  '#E5E5E5',
+                    color:       '#1A1A1A',
+                    fontSize:     14,
+                    fontWeight:   500,
+                  }}
+                >
+                  Cancel
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </PageTransition>
   )
 }
