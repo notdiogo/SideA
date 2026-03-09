@@ -250,6 +250,18 @@ When changing the app name, theme color, or icons, update both the PWA manifest 
 
 ---
 
+## Git Workflow
+
+Before any push, always sync with the remote main branch to avoid conflicts:
+
+```bash
+git fetch origin && git rebase origin/main
+# or equivalently:
+git pull --rebase origin main
+```
+
+---
+
 ## Key Conventions for AI Assistants
 
 1. **No tests exist** — do not add test infrastructure unless explicitly asked.
