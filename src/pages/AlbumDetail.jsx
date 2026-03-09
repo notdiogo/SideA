@@ -72,7 +72,7 @@ export default function AlbumDetail() {
         {/* ── Options button (top-right) ── */}
         <div
           ref={optionsRef}
-          style={{ position: 'absolute', top: 12, right: 16, zIndex: 20 }}
+          style={{ position: 'fixed', top: 10, right: 16, zIndex: 35 }}
         >
           <motion.button
             type="button"
@@ -221,11 +221,11 @@ export default function AlbumDetail() {
                   alt=""
                   aria-hidden="true"
                   style={{
-                    width:        '100%',
-                    height:        220,
-                    objectFit:    'cover',
-                    transform:    'scaleY(-1)',
-                    marginTop:    -176,
+                    width:          '100%',
+                    height:          44,
+                    objectFit:      'cover',
+                    objectPosition: 'center bottom',
+                    transform:      'scaleY(-1)',
                     WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
                     maskImage:       'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
                   }}

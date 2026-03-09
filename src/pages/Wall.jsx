@@ -111,8 +111,13 @@ export default function Wall() {
             touchAction: 'pan-y',
           }}
           onPanEnd={(_, info) => {
-            const isSwipe = Math.abs(info.offset.x) > 50 || Math.abs(info.velocity.x) > 400
-            if (isSwipe) goTo(info.offset.x < 0 ? 1 : -1)
+            const dist  = Math.abs(info.offset.x)
+            const vel   = Math.abs(info.velocity.x)
+            if (dist < 30 && vel < 300) return
+            const steps = Math.max(1, Math.round(dist / (cardSize * SPACING * 0.7)))
+            const bonus = vel > 800 ? 1 : 0
+            const delta = Math.min(steps + bonus, 4) * (info.offset.x < 0 ? 1 : -1)
+            goTo(delta)
           }}
         >
           {sorted.map((album, albumIdx) => {
@@ -126,7 +131,7 @@ export default function Wall() {
               <motion.div
                 key={album.id}
                 animate={{
-                  x:       slot * cardSize * SPACING,
+                  x:       (slot < 0 ? -1 : 1) * Math.min(abs, VISIBLE_R) * cardSize * SPACING,
                   scale:   1 - Math.min(abs, VISIBLE_R) * SCALE_DRP,
                   opacity: visible ? 1 - abs * OPACITY_DRP : 0,
                 }}
@@ -183,8 +188,8 @@ export default function Wall() {
                   )}
                 </div>
 
-                {/* Reflection — vertical flip only, 10% → 0% opacity */}
-                {album.coverImage && (
+                {/* Reflection — center only, vertical flip, bottom of image at top */}
+                {slot === 0 && album.coverImage && (
                   <div
                     style={{
                       width:        cardSize,
@@ -199,11 +204,11 @@ export default function Wall() {
                       aria-hidden="true"
                       draggable={false}
                       style={{
-                        width:        '100%',
-                        height:       cardSize,
-                        objectFit:    'cover',
-                        transform:    'scaleY(-1)',
-                        marginTop:    -(cardSize - reflectionH),
+                        width:          '100%',
+                        height:         reflectionH,
+                        objectFit:      'cover',
+                        objectPosition: 'center bottom',
+                        transform:      'scaleY(-1)',
                         WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
                         maskImage:       'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
                       }}
