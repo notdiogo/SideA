@@ -166,13 +166,13 @@ export default function Lyrics() {
             {fetchState === 'done' && updatedTrack.lyrics && (
               <p
                 style={{
-                  fontSize:   '16px',
+                  fontSize:   '18px',
                   lineHeight: 'var(--leading-loose)',
                   color:      'var(--color-foreground)',
                   whiteSpace: 'pre-wrap',
                   maxWidth:   '68ch',
                   margin:     '0 auto',
-                  fontWeight:  300,
+                  fontWeight:  400,
                 }}
               >
                 {updatedTrack.lyrics}
@@ -215,7 +215,6 @@ export default function Lyrics() {
           justifyContent:      'space-between',
           padding:             '16px 24px',
           paddingBottom:       'max(16px, env(safe-area-inset-bottom))',
-          borderTop:           '1px solid var(--color-border)',
           background:          'var(--color-nav-bg)',
           backdropFilter:      'blur(20px)',
           WebkitBackdropFilter:'blur(20px)',
@@ -250,12 +249,9 @@ export default function Lyrics() {
               {tracks.map((_, i) => (
                 <motion.div
                   key={i}
-                  animate={{
-                    width:   i === currentIndex ? 16 : 4,
-                    opacity: i === currentIndex ? 1 : 0.25,
-                  }}
+                  animate={{ width: i === currentIndex ? 16 : 4 }}
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ height: 4, borderRadius: 2, cursor: 'pointer', backgroundColor: 'var(--color-foreground)' }}
+                  style={{ height: 4, borderRadius: 2, cursor: 'pointer', backgroundColor: 'var(--color-foreground)', opacity: i === currentIndex ? 1 : 0.25 }}
                   onClick={() => goTo(i, i > currentIndex ? 1 : -1)}
                 />
               ))}
