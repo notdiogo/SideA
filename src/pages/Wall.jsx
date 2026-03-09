@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useCollectionContext } from '../App'
 import EmptyState from '../components/ui/EmptyState'
 import PageTransition from '../components/layout/PageTransition'
@@ -111,12 +111,12 @@ function AlbumCard({ album }) {
 }
 
 export default function Wall() {
-  const { albums } = useCollectionContext()
+  const { albums, loading } = useCollectionContext()
 
   return (
     <PageTransition>
       <div style={{ padding: '24px 0 40px' }}>
-        {albums.length === 0 ? (
+        {loading ? null : albums.length === 0 ? (
           <EmptyState />
         ) : (
           <motion.div
@@ -133,11 +133,9 @@ export default function Wall() {
               alignItems: 'flex-start',
             }}
           >
-            <AnimatePresence>
-              {albums.map((album) => (
-                <AlbumCard key={album.id} album={album} />
-              ))}
-            </AnimatePresence>
+            {albums.map((album) => (
+              <AlbumCard key={album.id} album={album} />
+            ))}
           </motion.div>
         )}
       </div>

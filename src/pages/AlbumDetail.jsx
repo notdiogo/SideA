@@ -61,7 +61,7 @@ export default function AlbumDetail() {
               style={{
                 position: 'absolute',
                 right: -28,
-                top: '50%',
+                top: 110,
                 transform: 'translateY(-50%)',
                 zIndex: 0,
               }}
@@ -115,6 +115,7 @@ export default function AlbumDetail() {
                   width: 220,
                   height: 44,
                   overflow: 'hidden',
+                  borderRadius: '0 0 18px 18px',
                 }}
               >
                 <img
