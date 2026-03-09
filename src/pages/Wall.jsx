@@ -95,6 +95,7 @@ export default function Wall() {
             height:    'calc(100dvh - var(--nav-height))',
           }}
         >
+          <div style={{ maxWidth: 600, margin: '0 auto' }}>
           {sorted.map(album => (
             <button
               key={album.id}
@@ -167,6 +168,7 @@ export default function Wall() {
               <ChevronRight size={16} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)', flexShrink: 0 }} />
             </button>
           ))}
+          </div>
         </div>
       </PageTransition>
     )

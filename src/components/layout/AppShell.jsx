@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ChevronLeft, SlidersHorizontal, Plus, List, LayoutGrid, Moon, Sun } from 'lucide-react'
+import { ChevronLeft, MoreHorizontal, Plus, List, LayoutGrid, Moon, Sun } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCollectionContext } from '../../App'
 
@@ -120,7 +120,7 @@ export default function AppShell({ children }) {
                   color:          'var(--color-foreground)',
                 }}
               >
-                <SlidersHorizontal size={16} strokeWidth={1.5} />
+                <MoreHorizontal size={18} strokeWidth={1.75} />
               </motion.button>
 
               <AnimatePresence>
