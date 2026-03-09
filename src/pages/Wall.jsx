@@ -10,8 +10,9 @@ function useCardSize() {
   const calc = () => {
     const vw = window.innerWidth
     const vh = window.innerHeight - 56
-    if (vw < 640) return Math.min(Math.round(vw * 0.72), 320)
-    return Math.min(Math.round(vh * 0.5), Math.round(vw * 0.38), 380)
+    if (vw < 640)  return Math.min(Math.round(vw * 0.72), 320)
+    if (vw < 1024) return Math.min(Math.round(vh * 0.52), Math.round(vw * 0.44), 420)
+    return          Math.min(Math.round(vh * 0.55), Math.round(vw * 0.38), 460)
   }
   const [size, setSize] = useState(calc)
   useEffect(() => {
@@ -36,16 +37,22 @@ const OPACITY_DRP = 0.18 // opacity reduction per slot step
 const RENDER_R  = 3      // render ±3 slots (invisible beyond ±2)
 const VISIBLE_R = 2
 
+// Module-level: persists across React Router navigation, resets on page refresh
+let _carouselIndex = 0
+
 export default function Wall() {
   const { albums, loading, viewMode } = useCollectionContext()
   const navigate = useNavigate()
   const cardSize = useCardSize()
-  const [index, setIndex] = useState(0)
+  const [index, setIndex] = useState(_carouselIndex)
 
   const sorted = useMemo(
     () => [...albums].sort((a, b) => (a.artist || '').localeCompare(b.artist || '')),
     [albums]
   )
+
+  // Keep module var in sync so it survives unmount
+  useEffect(() => { _carouselIndex = index }, [index])
 
   // Guard: reset if albums shrink below current index
   useEffect(() => {
@@ -215,7 +222,7 @@ export default function Wall() {
             if (Math.abs(slot) > RENDER_R) return null
             const abs     = Math.abs(slot)
             const visible = abs <= VISIBLE_R
-            const radius  = Math.round(cardSize * 0.08)
+            const radius  = 8
 
             return (
               <motion.div
@@ -285,7 +292,7 @@ export default function Wall() {
                       width:        cardSize,
                       height:       reflectionH,
                       overflow:     'hidden',
-                      borderRadius: '18px 18px 0 0',
+                      borderRadius: '8px 8px 0 0',
                     }}
                   >
                     <img

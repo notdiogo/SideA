@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import { useSwipe } from '../hooks/useSwipe'
+import { useViewport } from '../hooks/useViewport'
 import { fetchLyrics } from '../lib/lyrics'
 
 export default function Lyrics() {
@@ -14,6 +15,7 @@ export default function Lyrics() {
   const [direction, setDirection] = useState(0)
   // 'idle' | 'loading' | 'done'
   const [fetchState, setFetchState] = useState('idle')
+  const { isLandscape, isTablet } = useViewport()
 
   const album = albums.find(a => a.id === albumId)
 
@@ -86,6 +88,168 @@ export default function Lyrics() {
   const isPrevDisabled = currentIndex === 0
   const isNextDisabled = currentIndex === tracks.length - 1
 
+  // Shared: navigation dots
+  const navDots = tracks.length <= 12 && (
+    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+      {tracks.map((_, i) => (
+        <motion.div
+          key={i}
+          initial={false}
+          animate={{ width: i === currentIndex ? 16 : 6, opacity: i === currentIndex ? 1 : 0.25 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          style={{ height: 6, borderRadius: 3, cursor: 'pointer', backgroundColor: 'var(--color-foreground)', flexShrink: 0 }}
+          onClick={() => goTo(i, i > currentIndex ? 1 : -1)}
+        />
+      ))}
+    </div>
+  )
+
+  // Shared: lyrics body (loading / text / unavailable)
+  const lyricsBody = (
+    <>
+      {fetchState === 'loading' && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '40vh', gap: '12px' }}>
+          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+            <Loader2 size={20} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
+          </motion.div>
+          <p style={{ color: 'var(--color-muted-foreground)', fontSize: '14px', fontWeight: 300 }}>Fetching lyrics…</p>
+        </div>
+      )}
+      {fetchState === 'done' && updatedTrack.lyrics && (
+        <p style={{ fontSize: '18px', lineHeight: 'var(--leading-loose)', color: 'var(--color-foreground)', whiteSpace: 'pre-wrap', maxWidth: '68ch', margin: '0 auto', fontWeight: 400 }}>
+          {updatedTrack.lyrics}
+        </p>
+      )}
+      {fetchState === 'done' && !updatedTrack.lyrics && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '40vh', gap: '8px' }}>
+          <p style={{ color: 'var(--color-muted-foreground)', fontSize: '14px', fontWeight: 300 }}>
+            Lyrics not available
+          </p>
+          <span
+            style={{ color: 'var(--color-foreground)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
+            onClick={() => navigate(`/album/${albumId}/edit`)}
+          >
+            Add manually
+          </span>
+        </div>
+      )}
+    </>
+  )
+
+  // ── Landscape two-column layout (tablet only) ─────────────────────────────
+  if (isTablet && isLandscape) {
+    return (
+      <div
+        style={{
+          height:        'calc(100dvh - var(--nav-height))',
+          display:       'flex',
+          flexDirection: 'row',
+          background:    'var(--color-background)',
+        }}
+        {...swipeHandlers}
+      >
+        {/* Left panel: track info + navigation */}
+        <div
+          style={{
+            width:         272,
+            flexShrink:    0,
+            display:       'flex',
+            flexDirection: 'column',
+            padding:       '32px 28px',
+            borderRight:   '1px solid var(--color-border)',
+          }}
+        >
+          {/* Track info */}
+          <div>
+            <p
+              style={{
+                fontSize:      '11px',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color:          'var(--color-muted-foreground)',
+                marginBottom:  '8px',
+                fontWeight:     500,
+              }}
+            >
+              {album.title}
+            </p>
+            <h1
+              style={{
+                fontSize:      '22px',
+                fontWeight:     600,
+                letterSpacing: '-0.01em',
+                color:          'var(--color-foreground)',
+                lineHeight:     1.2,
+              }}
+            >
+              {updatedTrack.title}
+            </h1>
+          </div>
+
+          <div style={{ flex: 1 }} />
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <span style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300 }}>
+              {currentIndex + 1} / {tracks.length}
+            </span>
+            {navDots}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={goPrev}
+                disabled={isPrevDisabled}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 44, height: 44, borderRadius: '999px',
+                  background: isPrevDisabled ? 'transparent' : 'var(--color-secondary)',
+                  color: 'var(--color-muted-foreground)',
+                  opacity: isPrevDisabled ? 0.35 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+              >
+                <ChevronLeft size={20} strokeWidth={1.5} />
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={goNext}
+                disabled={isNextDisabled}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 44, height: 44, borderRadius: '999px',
+                  background: isNextDisabled ? 'transparent' : 'var(--color-secondary)',
+                  color: 'var(--color-muted-foreground)',
+                  opacity: isNextDisabled ? 0.35 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+              >
+                <ChevronRight size={20} strokeWidth={1.5} />
+              </motion.button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right panel: scrollable lyrics */}
+        <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={currentTrackId}
+              custom={direction}
+              variants={lyricsVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '32px 40px' }}
+            >
+              {lyricsBody}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Portrait layout (default) ─────────────────────────────────────────────
   return (
     <div
       style={{
@@ -140,68 +304,7 @@ export default function Lyrics() {
               padding:   '24px',
             }}
           >
-            {/* Loading state */}
-            {fetchState === 'loading' && (
-              <div
-                style={{
-                  display:        'flex',
-                  flexDirection:  'column',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  height:         '40vh',
-                  gap:            '12px',
-                }}
-              >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                >
-                  <Loader2 size={20} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
-                </motion.div>
-                <p style={{ color: 'var(--color-muted-foreground)', fontSize: '14px', fontWeight: 300 }}>Fetching lyrics…</p>
-              </div>
-            )}
-
-            {/* Lyrics found */}
-            {fetchState === 'done' && updatedTrack.lyrics && (
-              <p
-                style={{
-                  fontSize:   '16px',
-                  lineHeight: 'var(--leading-loose)',
-                  color:      'var(--color-foreground)',
-                  whiteSpace: 'pre-wrap',
-                  maxWidth:   '68ch',
-                  margin:     '0 auto',
-                  fontWeight:  300,
-                }}
-              >
-                {updatedTrack.lyrics}
-              </p>
-            )}
-
-            {/* Lyrics unavailable */}
-            {fetchState === 'done' && !updatedTrack.lyrics && (
-              <div
-                style={{
-                  display:        'flex',
-                  flexDirection:  'column',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  height:         '40vh',
-                  gap:            '8px',
-                }}
-              >
-                <p style={{ color: 'var(--color-muted-foreground)', fontSize: '14px', fontWeight: 300 }}>
-                  Lyrics not available
-                </p>
-                <span
-                  style={{ color: 'var(--color-foreground)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
-                  onClick={() => navigate(`/album/${albumId}/edit`)}
-                >
-                  Add manually
-                </span>
-              </div>
-            )}
+            {lyricsBody}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -215,7 +318,6 @@ export default function Lyrics() {
           justifyContent:      'space-between',
           padding:             '16px 24px',
           paddingBottom:       'max(16px, env(safe-area-inset-bottom))',
-          borderTop:           '1px solid var(--color-border)',
           background:          'var(--color-nav-bg)',
           backdropFilter:      'blur(20px)',
           WebkitBackdropFilter:'blur(20px)',
@@ -245,22 +347,7 @@ export default function Lyrics() {
           <span style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300 }}>
             {currentIndex + 1} / {tracks.length}
           </span>
-          {tracks.length <= 12 && (
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {tracks.map((_, i) => (
-                <motion.div
-                  key={i}
-                  animate={{
-                    width:   i === currentIndex ? 16 : 4,
-                    opacity: i === currentIndex ? 1 : 0.25,
-                  }}
-                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ height: 4, borderRadius: 2, cursor: 'pointer', backgroundColor: 'var(--color-foreground)' }}
-                  onClick={() => goTo(i, i > currentIndex ? 1 : -1)}
-                />
-              ))}
-            </div>
-          )}
+          {navDots}
         </div>
 
         <motion.button
