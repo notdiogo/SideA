@@ -10,8 +10,9 @@ function useCardSize() {
   const calc = () => {
     const vw = window.innerWidth
     const vh = window.innerHeight - 56
-    if (vw < 640) return Math.min(Math.round(vw * 0.72), 320)
-    return Math.min(Math.round(vh * 0.5), Math.round(vw * 0.38), 380)
+    if (vw < 640)  return Math.min(Math.round(vw * 0.72), 320)
+    if (vw < 1024) return Math.min(Math.round(vh * 0.52), Math.round(vw * 0.44), 420)
+    return          Math.min(Math.round(vh * 0.55), Math.round(vw * 0.38), 460)
   }
   const [size, setSize] = useState(calc)
   useEffect(() => {
