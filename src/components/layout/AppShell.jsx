@@ -44,17 +44,15 @@ export default function AppShell({ children }) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '2px',
-                padding: '6px 14px 6px 10px',
+                justifyContent: 'center',
+                width: 36,
+                height: 36,
                 borderRadius: '999px',
                 background: '#E5E5E5',
-                color: '#9A9A9A',
-                fontSize: '14px',
-                fontWeight: 500,
+                color: '#1A1A1A',
               }}
             >
-              <ChevronLeft size={16} strokeWidth={1.5} />
-              Back
+              <ChevronLeft size={18} strokeWidth={1.5} />
             </motion.button>
           )}
         </div>
@@ -70,7 +68,7 @@ export default function AppShell({ children }) {
                 letterSpacing: '-0.01em',
               }}
             >
-              Side A
+              My Collection
             </span>
           ) : title ? (
             <span

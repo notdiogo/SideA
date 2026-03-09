@@ -209,8 +209,8 @@ export default function Wall() {
                         objectFit:      'cover',
                         objectPosition: 'center bottom',
                         transform:      'scaleY(-1)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
-                        maskImage:       'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%)',
+                        maskImage:       'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%)',
                       }}
                     />
                   </div>

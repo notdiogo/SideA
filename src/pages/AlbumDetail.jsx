@@ -66,14 +66,13 @@ export default function AlbumDetail() {
   const tracks = album.tracks || []
 
   return (
-    <PageTransition>
-      <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
-
-        {/* ── Options button (top-right) ── */}
-        <div
-          ref={optionsRef}
-          style={{ position: 'fixed', top: 10, right: 16, zIndex: 35 }}
-        >
+    <>
+      {/* ── Options button — outside PageTransition so position:fixed isn't
+           broken by the parent transform animation ── */}
+      <div
+        ref={optionsRef}
+        style={{ position: 'fixed', top: 10, right: 16, zIndex: 35 }}
+      >
           <motion.button
             type="button"
             whileTap={{ scale: 0.92 }}
@@ -151,6 +150,9 @@ export default function AlbumDetail() {
           </AnimatePresence>
         </div>
 
+      <PageTransition>
+      <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
+
         {/* ── Cover + vinyl ── */}
         <div style={{ padding: '32px 32px 0', display: 'flex', justifyContent: 'center' }}>
           <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -226,8 +228,8 @@ export default function AlbumDetail() {
                     objectFit:      'cover',
                     objectPosition: 'center bottom',
                     transform:      'scaleY(-1)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
-                    maskImage:       'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%)',
+                    maskImage:       'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%)',
                   }}
                 />
               </div>
@@ -422,6 +424,7 @@ export default function AlbumDetail() {
           </motion.div>
         )}
       </AnimatePresence>
-    </PageTransition>
+      </PageTransition>
+    </>
   )
 }
