@@ -62,3 +62,18 @@ export async function fetchLyrics(artist, trackTitle) {
 
   return null
 }
+
+/**
+ * Fetch lyrics for all tracks in an album that don't already have them.
+ * Runs all requests in parallel. Returns the full tracks array with lyrics
+ * filled in where found (tracks that already had lyrics are untouched).
+ */
+export async function prefetchAlbumLyrics(artist, tracks) {
+  return Promise.all(
+    tracks.map(async (track) => {
+      if (track.lyrics) return track
+      const lyrics = await fetchLyrics(artist, track.title)
+      return { ...track, lyrics: lyrics ?? '' }
+    })
+  )
+}

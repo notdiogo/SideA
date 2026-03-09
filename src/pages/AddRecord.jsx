@@ -7,6 +7,7 @@ import ImageUpload from '../components/forms/ImageUpload'
 import TrackListEditor from '../components/forms/TrackListEditor'
 import PageTransition from '../components/layout/PageTransition'
 import { searchRelease, fetchCoverAsBase64 } from '../lib/musicbrainz'
+import { prefetchAlbumLyrics } from '../lib/lyrics'
 
 const inputStyle = {
   width: '100%',
@@ -314,11 +315,19 @@ export default function AddRecord() {
     }
 
     if (isEditing) {
-      await updateAlbum({ id: albumId, ...albumData })
+      const saved = await updateAlbum({ id: albumId, ...albumData })
       navigate(`/album/${albumId}`)
+      // Prefetch lyrics for any tracks that don't have them yet
+      prefetchAlbumLyrics(saved.artist, saved.tracks).then(tracksWithLyrics => {
+        updateAlbum({ ...saved, tracks: tracksWithLyrics })
+      })
     } else {
       const album = await addAlbum(albumData)
       navigate(`/album/${album.id}`)
+      // Prefetch all track lyrics in the background after navigation
+      prefetchAlbumLyrics(album.artist, album.tracks).then(tracksWithLyrics => {
+        updateAlbum({ ...album, tracks: tracksWithLyrics })
+      })
     }
   }
 
