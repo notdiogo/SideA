@@ -11,10 +11,10 @@ import { searchRelease, fetchCoverAsBase64 } from '../lib/musicbrainz'
 const inputStyle = {
   width: '100%',
   padding: '12px 14px',
-  background: '#FFFFFF',
+  background: 'var(--color-card)',
   border: 'none',
   borderRadius: '12px',
-  color: '#1A1A1A',
+  color: 'var(--color-foreground)',
   fontSize: '15px',
   outline: 'none',
   boxShadow: '0 1px 6px rgba(0,0,0,0.06)',

@@ -11,7 +11,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
     <Reorder.Item value={track} id={track.id} dragControls={dragControls} dragListener={false}>
       <div
         style={{
-          background: '#FFFFFF',
+          background: 'var(--color-card)',
           borderRadius: '12px',
           overflow: 'hidden',
           boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
@@ -105,7 +105,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               style={{ overflow: 'hidden' }}
             >
-              <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 12px' }}>
+              <div style={{ borderTop: '1px solid var(--color-border)', padding: '10px 12px' }}>
                 <textarea
                   value={track.lyrics}
                   onChange={(e) => onChange({ ...track, lyrics: e.target.value })}
@@ -116,7 +116,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    color: 'var(--color-muted-foreground)',
+                    color: 'var(--color-foreground)',
                     fontSize: '13px',
                     lineHeight: 1.6,
                     resize: 'vertical',
@@ -176,7 +176,7 @@ export default function TrackListEditor({ tracks, onChange }) {
           width: '100%',
           padding: '10px 12px',
           borderRadius: '8px',
-          border: '1px dashed rgba(0,0,0,0.15)',
+          border: '1px dashed var(--color-border)',
           color: 'var(--color-muted-foreground)',
           fontSize: '14px',
           background: 'transparent',
