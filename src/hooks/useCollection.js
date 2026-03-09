@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
 import * as store from '../store/supabaseCollection'
-import { prefetchAlbumLyrics } from '../lib/lyrics'
 
 export function useCollection(user) {
   const [albums, setAlbums] = useState([])
@@ -14,19 +13,7 @@ export function useCollection(user) {
     }
     setLoading(true)
     store.getAll()
-      .then(data => {
-        setAlbums(data)
-        // Backfill lyrics for any existing albums that are missing them
-        const needsLyrics = data.filter(a =>
-          a.artist && a.tracks?.some(t => t.title && !t.lyrics)
-        )
-        needsLyrics.forEach(album => {
-          prefetchAlbumLyrics(album.artist, album.tracks).then(async tracksWithLyrics => {
-            const saved = await store.save({ ...album, tracks: tracksWithLyrics })
-            setAlbums(prev => prev.map(a => a.id === saved.id ? saved : a))
-          })
-        })
-      })
+      .then(data => setAlbums(data))
       .catch(() => setAlbums([]))
       .finally(() => setLoading(false))
   }, [user])
