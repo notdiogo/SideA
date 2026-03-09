@@ -36,16 +36,22 @@ const OPACITY_DRP = 0.18 // opacity reduction per slot step
 const RENDER_R  = 3      // render ±3 slots (invisible beyond ±2)
 const VISIBLE_R = 2
 
+// Module-level: persists across React Router navigation, resets on page refresh
+let _carouselIndex = 0
+
 export default function Wall() {
   const { albums, loading, viewMode } = useCollectionContext()
   const navigate = useNavigate()
   const cardSize = useCardSize()
-  const [index, setIndex] = useState(0)
+  const [index, setIndex] = useState(_carouselIndex)
 
   const sorted = useMemo(
     () => [...albums].sort((a, b) => (a.artist || '').localeCompare(b.artist || '')),
     [albums]
   )
+
+  // Keep module var in sync so it survives unmount
+  useEffect(() => { _carouselIndex = index }, [index])
 
   // Guard: reset if albums shrink below current index
   useEffect(() => {
