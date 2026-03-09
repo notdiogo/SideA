@@ -221,7 +221,7 @@ export default function Wall() {
             if (Math.abs(slot) > RENDER_R) return null
             const abs     = Math.abs(slot)
             const visible = abs <= VISIBLE_R
-            const radius  = Math.round(cardSize * 0.08)
+            const radius  = 8
 
             return (
               <motion.div
@@ -291,7 +291,7 @@ export default function Wall() {
                       width:        cardSize,
                       height:       reflectionH,
                       overflow:     'hidden',
-                      borderRadius: '18px 18px 0 0',
+                      borderRadius: '8px 8px 0 0',
                     }}
                   >
                     <img

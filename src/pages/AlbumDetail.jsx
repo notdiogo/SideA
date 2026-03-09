@@ -179,7 +179,7 @@ export default function AlbumDetail() {
                   zIndex:        1,
                   width:         220,
                   height:        220,
-                  borderRadius: '18px',
+                  borderRadius: '8px',
                   overflow:     'hidden',
                   boxShadow:    '0 8px 32px rgba(0,0,0,0.12)',
                 }}
@@ -215,7 +215,7 @@ export default function AlbumDetail() {
                     width:         220,
                     height:        44,
                     overflow:     'hidden',
-                    borderRadius: '18px 18px 0 0',
+                    borderRadius: '8px 8px 0 0',
                   }}
                 >
                   <img
