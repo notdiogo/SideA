@@ -249,9 +249,9 @@ export default function Lyrics() {
               {tracks.map((_, i) => (
                 <motion.div
                   key={i}
-                  animate={{ width: i === currentIndex ? 16 : 4 }}
-                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ height: 4, borderRadius: 2, cursor: 'pointer', backgroundColor: 'var(--color-foreground)', opacity: i === currentIndex ? 1 : 0.25 }}
+                  animate={{ opacity: i === currentIndex ? 1 : 0.25 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  style={{ width: 6, height: 6, borderRadius: '50%', cursor: 'pointer', backgroundColor: 'var(--color-foreground)', flexShrink: 0 }}
                   onClick={() => goTo(i, i > currentIndex ? 1 : -1)}
                 />
               ))}
