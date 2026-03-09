@@ -35,11 +35,9 @@ export async function getById(id) {
 }
 
 export async function save(album) {
-  const { data: { user } } = await supabase.auth.getUser()
   const now = new Date().toISOString()
   const row = {
     id: album.id,
-    user_id: user.id,
     title: album.title,
     artist: album.artist,
     year: album.year || null,
