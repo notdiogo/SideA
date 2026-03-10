@@ -14,8 +14,9 @@ import Login from './pages/Login'
 export const CollectionContext = createContext(null)
 export const useCollectionContext = () => useContext(CollectionContext)
 
-export default function App() {
-  const session = useAuth()
+// Mounted only after auth is confirmed — ensures store.getAll() always
+// runs with a valid session token already in the Supabase client.
+function AuthenticatedApp() {
   const collection = useCollection()
   const location = useLocation()
 
@@ -30,7 +31,6 @@ export default function App() {
     const isDark = theme === 'night'
     document.documentElement.classList.toggle('dark', isDark)
     localStorage.setItem('theme', theme)
-    // Keep theme-color in sync so browser chrome / PWA status bar matches
     const meta = document.querySelector('meta[name="theme-color"]')
     if (meta) meta.setAttribute('content', isDark ? '#111111' : '#EFEFEF')
   }, [theme])
@@ -38,12 +38,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('viewMode', viewMode)
   }, [viewMode])
-
-  // Still resolving auth state — render nothing to avoid flash
-  if (session === undefined) return null
-
-  // Not authenticated — show login screen (outside AppShell so no nav bar)
-  if (session === null) return <Login />
 
   const signOut = () => supabase.auth.signOut()
 
@@ -62,4 +56,13 @@ export default function App() {
       </AppShell>
     </CollectionContext.Provider>
   )
+}
+
+export default function App() {
+  const session = useAuth()
+
+  if (session === undefined) return null   // resolving — avoid flash
+  if (session === null)      return <Login />
+
+  return <AuthenticatedApp />
 }
