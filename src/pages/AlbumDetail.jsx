@@ -205,15 +205,15 @@ export default function AlbumDetail() {
               maxWidth:    1100,
               margin:      '0 auto',
               display:     'flex',
-              gap:          56,
-              padding:     '40px 48px 64px',
+              gap:          32,
+              padding:     '36px 16px 64px',
               alignItems:  'flex-start',
             }}
           >
             {/* Left: album art + vinyl, sticky */}
             <div
               style={{
-                width:       300,
+                width:       260,
                 flexShrink:  0,
                 position:   'sticky',
                 top:        'calc(var(--nav-height) + 24px)',

@@ -227,6 +227,7 @@ export default function Wall() {
             return (
               <motion.div
                 key={album.id}
+                initial={false}
                 animate={{
                   x:       (slot < 0 ? -1 : 1) * Math.min(abs, VISIBLE_R) * cardSize * SPACING,
                   scale:   1 - Math.min(abs, VISIBLE_R) * SCALE_DRP,
