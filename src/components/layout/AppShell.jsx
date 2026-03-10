@@ -21,6 +21,7 @@ export default function AppShell({ children }) {
   const navigate = useNavigate()
   const { viewMode, setViewMode, theme, setTheme } = useCollectionContext()
   const isHome = location.pathname === '/'
+  const isLyrics = /\/track\//.test(location.pathname)
 
   const [showOptions, setShowOptions] = useState(false)
   const optionsRef = useRef(null)
@@ -59,12 +60,14 @@ export default function AppShell({ children }) {
           height:              'var(--nav-height)',
           zIndex:               30,
           display:             'flex',
-          alignItems:          'center',
+          alignItems:          'flex-end',
           justifyContent:      'space-between',
           padding:             '0 16px',
-          background:          'var(--color-nav-bg)',
-          backdropFilter:      'blur(20px)',
-          WebkitBackdropFilter:'blur(20px)',
+          paddingTop:          'env(safe-area-inset-top)',
+          background:          isLyrics ? 'transparent' : 'var(--color-nav-bg)',
+          backdropFilter:      isLyrics ? 'none' : 'blur(20px)',
+          WebkitBackdropFilter:isLyrics ? 'none' : 'blur(20px)',
+          transition:          'background 0.3s',
         }}
       >
         {/* Left: back button */}

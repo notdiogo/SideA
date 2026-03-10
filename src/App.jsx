@@ -23,8 +23,12 @@ export default function App() {
   )
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'night')
+    const isDark = theme === 'night'
+    document.documentElement.classList.toggle('dark', isDark)
     localStorage.setItem('theme', theme)
+    // Keep theme-color in sync so browser chrome / PWA status bar matches
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', isDark ? '#111111' : '#EFEFEF')
   }, [theme])
 
   useEffect(() => {

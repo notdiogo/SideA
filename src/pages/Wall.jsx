@@ -227,6 +227,7 @@ export default function Wall() {
             return (
               <motion.div
                 key={album.id}
+                initial={false}
                 animate={{
                   x:       (slot < 0 ? -1 : 1) * Math.min(abs, VISIBLE_R) * cardSize * SPACING,
                   scale:   1 - Math.min(abs, VISIBLE_R) * SCALE_DRP,
@@ -318,7 +319,7 @@ export default function Wall() {
         </motion.div>
 
         {/* Centered label — only for the active album */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={current.id}
             initial={{ opacity: 0, y: 8 }}

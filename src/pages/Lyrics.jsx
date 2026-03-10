@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
@@ -13,8 +13,10 @@ export default function Lyrics() {
   const { albums, updateAlbum } = useCollectionContext()
   const [currentTrackId, setCurrentTrackId] = useState(trackId)
   const [direction, setDirection] = useState(0)
-  // 'idle' | 'loading' | 'done'
   const [fetchState, setFetchState] = useState('idle')
+  const [navVisible, setNavVisible] = useState(true)
+  const scrollTimer = useRef(null)
+  const lastScrollY = useRef(0)
   const { isLandscape, isTablet } = useViewport()
 
   const album = albums.find(a => a.id === albumId)
@@ -38,29 +40,31 @@ export default function Lyrics() {
     return null
   }
 
-  // Fetch lyrics on-demand when track has none stored
+  // Fetch lyrics + reset nav auto-hide on track change
   useEffect(() => {
-    if (currentTrack.lyrics) {
+    setNavVisible(true)
+    lastScrollY.current = 0
+    clearTimeout(scrollTimer.current)
+    scrollTimer.current = setTimeout(() => setNavVisible(false), 2000)
+
+    if (!currentTrack.lyrics && album.artist && currentTrack.title) {
+      setFetchState('loading')
+      fetchLyrics(album.artist, currentTrack.title).then(text => {
+        if (text) {
+          updateAlbum({
+            ...album,
+            tracks: album.tracks.map(t =>
+              t.id === currentTrack.id ? { ...t, lyrics: text } : t
+            ),
+          })
+        }
+        setFetchState('done')
+      })
+    } else {
       setFetchState('done')
-      return
-    }
-    if (!album.artist || !currentTrack.title) {
-      setFetchState('done')
-      return
     }
 
-    setFetchState('loading')
-    fetchLyrics(album.artist, currentTrack.title).then(text => {
-      if (text) {
-        updateAlbum({
-          ...album,
-          tracks: album.tracks.map(t =>
-            t.id === currentTrack.id ? { ...t, lyrics: text } : t
-          ),
-        })
-      }
-      setFetchState('done')
-    })
+    return () => clearTimeout(scrollTimer.current)
   }, [currentTrackId])
 
   const goTo = (newIndex, dir) => {
@@ -76,15 +80,28 @@ export default function Lyrics() {
 
   const swipeHandlers = useSwipe({ onSwipeLeft: goNext, onSwipeRight: goPrev })
 
+  const handleScroll = (e) => {
+    const scrollTop = e.currentTarget.scrollTop
+    const isScrollingDown = scrollTop > lastScrollY.current
+    lastScrollY.current = scrollTop
+
+    if (isScrollingDown) {
+      clearTimeout(scrollTimer.current)
+      setNavVisible(false)
+    } else {
+      setNavVisible(true)
+      clearTimeout(scrollTimer.current)
+      scrollTimer.current = setTimeout(() => setNavVisible(false), 2000)
+    }
+  }
+
   const lyricsVariants = {
     initial: (dir) => ({ opacity: 0, x: dir * 60 }),
     animate: { opacity: 1, x: 0, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } },
     exit: (dir) => ({ opacity: 0, x: dir * -60, transition: { duration: 0.2 } }),
   }
 
-  // The track lyrics — may have been updated in context after fetch
   const updatedTrack = tracks.find(t => t.id === currentTrackId) ?? currentTrack
-
   const isPrevDisabled = currentIndex === 0
   const isNextDisabled = currentIndex === tracks.length - 1
 
@@ -159,36 +176,17 @@ export default function Lyrics() {
             borderRight:   '1px solid var(--color-border)',
           }}
         >
-          {/* Track info */}
           <div>
-            <p
-              style={{
-                fontSize:      '11px',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color:          'var(--color-muted-foreground)',
-                marginBottom:  '8px',
-                fontWeight:     500,
-              }}
-            >
+            <p style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '8px', fontWeight: 500 }}>
               {album.title}
             </p>
-            <h1
-              style={{
-                fontSize:      '22px',
-                fontWeight:     600,
-                letterSpacing: '-0.01em',
-                color:          'var(--color-foreground)',
-                lineHeight:     1.2,
-              }}
-            >
+            <h1 style={{ fontSize: '22px', fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--color-foreground)', lineHeight: 1.2 }}>
               {updatedTrack.title}
             </h1>
           </div>
 
           <div style={{ flex: 1 }} />
 
-          {/* Navigation */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <span style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300 }}>
               {currentIndex + 1} / {tracks.length}
@@ -199,14 +197,7 @@ export default function Lyrics() {
                 whileTap={{ scale: 0.9 }}
                 onClick={goPrev}
                 disabled={isPrevDisabled}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: 44, height: 44, borderRadius: '999px',
-                  background: isPrevDisabled ? 'transparent' : 'var(--color-secondary)',
-                  color: 'var(--color-muted-foreground)',
-                  opacity: isPrevDisabled ? 0.35 : 1,
-                  transition: 'opacity 0.2s',
-                }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isPrevDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isPrevDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
               >
                 <ChevronLeft size={20} strokeWidth={1.5} />
               </motion.button>
@@ -214,14 +205,7 @@ export default function Lyrics() {
                 whileTap={{ scale: 0.9 }}
                 onClick={goNext}
                 disabled={isNextDisabled}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: 44, height: 44, borderRadius: '999px',
-                  background: isNextDisabled ? 'transparent' : 'var(--color-secondary)',
-                  color: 'var(--color-muted-foreground)',
-                  opacity: isNextDisabled ? 0.35 : 1,
-                  transition: 'opacity 0.2s',
-                }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isNextDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isNextDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
               >
                 <ChevronRight size={20} strokeWidth={1.5} />
               </motion.button>
@@ -249,45 +233,20 @@ export default function Lyrics() {
     )
   }
 
-  // ── Portrait layout (default) ─────────────────────────────────────────────
+  // ── Portrait layout ───────────────────────────────────────────────────────
   return (
     <div
       style={{
-        minHeight:     'calc(100dvh - var(--nav-height))',
+        height:        'calc(100dvh - var(--nav-height))',
         display:       'flex',
         flexDirection: 'column',
+        position:      'relative',
+        overflow:      'hidden',
         background:    'var(--color-background)',
       }}
       {...swipeHandlers}
     >
-      {/* Track header */}
-      <div style={{ padding: '20px 24px 0', textAlign: 'center', flexShrink: 0 }}>
-        <p
-          style={{
-            fontSize:      '11px',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color:          'var(--color-muted-foreground)',
-            marginBottom:  '6px',
-            fontWeight:     500,
-          }}
-        >
-          {album.title}
-        </p>
-        <h1
-          style={{
-            fontSize:      '20px',
-            fontWeight:     600,
-            letterSpacing: '-0.01em',
-            color:          'var(--color-foreground)',
-            lineHeight:     1.25,
-          }}
-        >
-          {updatedTrack.title}
-        </h1>
-      </div>
-
-      {/* Lyrics area */}
+      {/* Lyrics area — title scrolls with lyrics */}
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
@@ -298,47 +257,51 @@ export default function Lyrics() {
             animate="animate"
             exit="exit"
             style={{
-              position:  'absolute',
-              inset:      0,
-              overflowY: 'auto',
-              padding:   '24px',
+              position:      'absolute',
+              inset:          0,
+              overflowY:     'auto',
+              // Extra bottom padding so last lyric line stays above the nav bar
+              padding:       'calc(24px + env(safe-area-inset-top, 0px)) 24px calc(96px + env(safe-area-inset-bottom, 0px))',
             }}
+            onScroll={handleScroll}
           >
+            {/* Track header — scrolls with the lyrics */}
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <p style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '6px', fontWeight: 500 }}>
+                {album.title}
+              </p>
+              <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--color-foreground)', lineHeight: 1.25 }}>
+                {updatedTrack.title}
+              </h1>
+            </div>
+
             {lyricsBody}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Navigation bar */}
-      <div
+      {/* Auto-hide navigation bar — slides out on scroll-down / after 2s */}
+      <motion.div
+        animate={{ y: navVisible ? 0 : '100%' }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         style={{
-          flexShrink:          0,
+          position:            'absolute',
+          bottom:               0,
+          left:                 0,
+          right:                0,
           display:             'flex',
           alignItems:          'center',
           justifyContent:      'space-between',
           padding:             '16px 24px',
           paddingBottom:       'max(16px, env(safe-area-inset-bottom))',
-          background:          'var(--color-nav-bg)',
-          backdropFilter:      'blur(20px)',
-          WebkitBackdropFilter:'blur(20px)',
+          background:          'transparent',
         }}
       >
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={goPrev}
           disabled={isPrevDisabled}
-          style={{
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'center',
-            width:           44,
-            height:          44,
-            borderRadius:   '999px',
-            background:     isPrevDisabled ? 'transparent' : 'var(--color-secondary)',
-            color:          'var(--color-muted-foreground)',
-            opacity:         isPrevDisabled ? 0.35 : 1,
-            transition:     'opacity 0.2s',
-          }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isPrevDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isPrevDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
         >
           <ChevronLeft size={20} strokeWidth={1.5} />
         </motion.button>
@@ -354,22 +317,11 @@ export default function Lyrics() {
           whileTap={{ scale: 0.9 }}
           onClick={goNext}
           disabled={isNextDisabled}
-          style={{
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'center',
-            width:           44,
-            height:          44,
-            borderRadius:   '999px',
-            background:     isNextDisabled ? 'transparent' : 'var(--color-secondary)',
-            color:          'var(--color-muted-foreground)',
-            opacity:         isNextDisabled ? 0.35 : 1,
-            transition:     'opacity 0.2s',
-          }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isNextDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isNextDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
         >
           <ChevronRight size={20} strokeWidth={1.5} />
         </motion.button>
-      </div>
+      </motion.div>
     </div>
   )
 }
