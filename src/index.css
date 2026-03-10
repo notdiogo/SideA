@@ -38,9 +38,11 @@
   --leading-loose: 1.8;
 }
 
-/* ── Nav background token (not in @theme to support rgba) ── */
+/* ── Nav background token + safe-area-aware nav height ── */
 :root {
   --color-nav-bg: rgba(239, 239, 239, 0.9);
+  /* Extend nav height to cover the status bar in black-translucent PWA mode */
+  --nav-height: calc(56px + env(safe-area-inset-top));
 }
 
 /* ── Dark theme overrides ── */
