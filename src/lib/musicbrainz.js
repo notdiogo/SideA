@@ -3,10 +3,19 @@ const MB = 'https://musicbrainz.org/ws/2'
 const CAA = 'https://coverartarchive.org/release'
 const MAX_SIZE = 600
 
-async function mbFetch(path) {
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+
+async function mbFetch(path, retry = true) {
   const res = await fetch(`${MB}${path}`, {
     headers: { 'User-Agent': UA, Accept: 'application/json' },
   })
+  if (res.status === 429) {
+    if (retry) {
+      await sleep(1500)
+      return mbFetch(path, false)
+    }
+    throw new Error('Rate limited')
+  }
   if (!res.ok) throw new Error(`MusicBrainz error: ${res.status}`)
   return res.json()
 }
@@ -29,6 +38,9 @@ export async function searchRelease(artist, album) {
   const artistName = top['artist-credit']?.[0]?.name ?? artist
   const date = top.date ?? ''
   const year = date.slice(0, 4) || ''
+
+  // Small delay to respect MusicBrainz rate limit (1 req/sec)
+  await sleep(1000)
 
   // Fetch full release to get tracklist
   const detail = await mbFetch(`/release/${mbid}?inc=recordings&fmt=json`)

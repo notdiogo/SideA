@@ -61,9 +61,13 @@ function AutoFillPanel({ onConfirm }) {
       setPreview({ ...result, coverImage: cover })
       setState('preview')
     } catch (err) {
-      setErrorMsg(err.message === 'No album found'
-        ? 'No album found. Try adjusting the artist or title.'
-        : 'Search failed. Check your connection and try again.')
+      setErrorMsg(
+        err.message === 'No album found'
+          ? 'No album found. Try adjusting the artist or title.'
+          : err.message === 'Rate limited'
+          ? 'Too many requests. Wait a moment and try again.'
+          : 'Search failed. Check your connection and try again.'
+      )
       setState('error')
     }
   }
