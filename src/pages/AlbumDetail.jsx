@@ -203,6 +203,7 @@ export default function AlbumDetail() {
           /* ── Landscape: two-column ── */
           <div
             style={{
+              width:       '100%',
               maxWidth:    1100,
               margin:      '0 auto',
               display:     'flex',
