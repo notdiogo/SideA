@@ -119,7 +119,7 @@ export default function AlbumDetail() {
            broken by the parent transform animation ── */}
       <div
         ref={optionsRef}
-        style={{ position: 'fixed', top: 10, right: 16, zIndex: 35 }}
+        style={{ position: 'fixed', top: 'calc(env(safe-area-inset-top) + 20px)', right: 16, zIndex: 35 }}
       >
         <motion.button
           type="button"
@@ -315,7 +315,7 @@ export default function AlbumDetail() {
           </div>
         ) : (
           /* ── Portrait: stacked ── */
-          <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
+          <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
 
             {/* Cover + vinyl */}
             <div style={{ padding: '32px 32px 0', display: 'flex', justifyContent: 'center' }}>
