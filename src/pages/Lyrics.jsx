@@ -280,8 +280,8 @@ export default function Lyrics() {
         </AnimatePresence>
       </div>
 
-      {/* Auto-hide navigation bar — slides out on scroll-down / after 2s */}
-      <motion.div
+      {/* Auto-hide navigation bar — tablet only; on phones the nav stays hidden */}
+      {isTablet && <motion.div
         animate={{ y: navVisible ? 0 : '100%' }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         style={{
@@ -321,7 +321,7 @@ export default function Lyrics() {
         >
           <ChevronRight size={20} strokeWidth={1.5} />
         </motion.button>
-      </motion.div>
+      </motion.div>}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useNavigationType } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MoreHorizontal, Edit3, Trash2, Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
@@ -37,6 +37,8 @@ export default function AlbumDetail() {
   const [showDelete, setShowDelete] = useState(false)
   const optionsRef = useRef(null)
   const { isLandscape, isTablet } = useViewport()
+
+  const isPop = useNavigationType() === 'POP'
 
   const album = albums.find(a => a.id === albumId)
 
@@ -83,7 +85,7 @@ export default function AlbumDetail() {
       type="button"
       custom={i}
       variants={trackVariants}
-      initial="initial"
+      initial={isPop ? false : 'initial'}
       animate="animate"
       whileTap={{ backgroundColor: 'var(--color-secondary)' }}
       onClick={() => navigate(`/album/${albumId}/track/${track.id}`)}
@@ -227,7 +229,7 @@ export default function AlbumDetail() {
 
                 {/* Album art */}
                 <motion.div
-                  initial={{ scale: 0.92, opacity: 0 }}
+                  initial={isPop ? false : { scale: 0.92, opacity: 0 }}
                   animate={{ scale: 1,    opacity: 1 }}
                   transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                   style={{
@@ -269,7 +271,7 @@ export default function AlbumDetail() {
             <div style={{ flex: 1, paddingTop: 4 }}>
               {/* Metadata — left aligned in landscape */}
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
+                initial={isPop ? false : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 style={{ paddingBottom: 28 }}
@@ -325,7 +327,7 @@ export default function AlbumDetail() {
 
                 {/* Album art */}
                 <motion.div
-                  initial={{ scale: 0.92, opacity: 0 }}
+                  initial={isPop ? false : { scale: 0.92, opacity: 0 }}
                   animate={{ scale: 1,    opacity: 1 }}
                   transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                   style={{
@@ -365,7 +367,7 @@ export default function AlbumDetail() {
 
             {/* Metadata */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={isPop ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               style={{ padding: '20px 24px 0', textAlign: 'center' }}

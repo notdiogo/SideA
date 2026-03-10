@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 function get() {
   const w = window.innerWidth
   const h = window.innerHeight
-  return { width: w, height: h, isLandscape: w > h, isTablet: w >= 768 }
+  return { width: w, height: h, isLandscape: w > h, isTablet: Math.min(w, h) >= 600 }
 }
 
 export function useViewport() {

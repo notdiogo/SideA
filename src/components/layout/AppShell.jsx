@@ -67,7 +67,6 @@ export default function AppShell({ children }) {
           background:          isLyrics ? 'transparent' : 'var(--color-nav-bg)',
           backdropFilter:      isLyrics ? 'none' : 'blur(20px)',
           WebkitBackdropFilter:isLyrics ? 'none' : 'blur(20px)',
-          transition:          'background 0.3s',
         }}
       >
         {/* Left: back button */}
