@@ -107,7 +107,7 @@ function AutoFillPanel({ onConfirm }) {
   const canSearch = !isSearching && artist.trim() && album.trim()
 
   return (
-    <div>
+    <div style={{ width: '100%' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
         <input
           style={inputStyle}
@@ -421,7 +421,7 @@ export default function AddRecord() {
 
   return (
     <PageTransition>
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 20px 48px' }}>
+      <div style={{ width: '100%', maxWidth: '640px', margin: '0 auto', padding: '24px 20px 48px' }}>
 
         {/* Mode toggle */}
         {!isEditing && (
@@ -464,7 +464,7 @@ export default function AddRecord() {
 
         {/* Manual form */}
         {mode === 'manual' && (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} style={{ width: '100%' }}>
             {autoFilled && (
               <div
                 style={{
@@ -486,7 +486,7 @@ export default function AddRecord() {
               <ImageUpload value={form.coverImage} onChange={set('coverImage')} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
               <Field label="Album title" error={errors.title}>
                 <input
                   style={{ ...inputStyle, boxShadow: errors.title ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)' }}

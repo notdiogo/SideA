@@ -34,7 +34,7 @@ export default function PageTransition({ children, className = '' }) {
       animate="animate"
       exit="exit"
       transition={transition}
-      style={{ flex: 1 }}
+      style={{ flex: 1, width: '100%' }}
     >
       {children}
     </motion.div>
