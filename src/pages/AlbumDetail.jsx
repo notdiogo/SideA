@@ -7,10 +7,9 @@ import { useViewport } from '../hooks/useViewport'
 import PageTransition from '../components/layout/PageTransition'
 
 const trackVariants = {
-  initial: { opacity: 0, x: 20 },
+  initial: { opacity: 0 },
   animate: (i) => ({
     opacity: 1,
-    x: 0,
     transition: { delay: i * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] },
   }),
 }
@@ -314,7 +313,7 @@ export default function AlbumDetail() {
           </div>
         ) : (
           /* ── Portrait: stacked ── */
-          <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
 
             {/* Cover + vinyl */}
             <div style={{ padding: '32px 32px 0', display: 'flex', justifyContent: 'center' }}>

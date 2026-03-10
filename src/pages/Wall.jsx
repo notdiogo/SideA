@@ -319,7 +319,7 @@ export default function Wall() {
         </motion.div>
 
         {/* Centered label — only for the active album */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={current.id}
             initial={{ opacity: 0, y: 8 }}

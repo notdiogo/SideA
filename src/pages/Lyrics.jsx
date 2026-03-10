@@ -294,9 +294,7 @@ export default function Lyrics() {
           justifyContent:      'space-between',
           padding:             '16px 24px',
           paddingBottom:       'max(16px, env(safe-area-inset-bottom))',
-          background:          'var(--color-nav-bg)',
-          backdropFilter:      'blur(20px)',
-          WebkitBackdropFilter:'blur(20px)',
+          background:          'transparent',
         }}
       >
         <motion.button
