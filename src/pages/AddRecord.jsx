@@ -6,7 +6,7 @@ import { useCollectionContext } from '../App'
 import ImageUpload from '../components/forms/ImageUpload'
 import TrackListEditor from '../components/forms/TrackListEditor'
 import PageTransition from '../components/layout/PageTransition'
-import { searchRelease, fetchCoverAsBase64 } from '../lib/musicbrainz'
+import { searchReleases, fetchRelease, fetchCoverAsBase64 } from '../lib/musicbrainz'
 
 const inputStyle = {
   width: '100%',
@@ -47,7 +47,9 @@ function Field({ label, error, children }) {
 function AutoFillPanel({ onConfirm }) {
   const [artist, setArtist] = useState('')
   const [album, setAlbum] = useState('')
-  const [state, setState] = useState('idle') // idle | loading | preview | error
+  // idle | loading | results | loading-detail | preview | error
+  const [state, setState] = useState('idle')
+  const [results, setResults] = useState([])
   const [preview, setPreview] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -55,11 +57,12 @@ function AutoFillPanel({ onConfirm }) {
     if (!artist.trim() || !album.trim()) return
     setState('loading')
     setErrorMsg('')
+    setResults([])
+    setPreview(null)
     try {
-      const result = await searchRelease(artist.trim(), album.trim())
-      const cover = await fetchCoverAsBase64(result.mbid)
-      setPreview({ ...result, coverImage: cover })
-      setState('preview')
+      const list = await searchReleases(artist.trim(), album.trim())
+      setResults(list)
+      setState('results')
     } catch (err) {
       setErrorMsg(
         err.message === 'No album found'
@@ -72,15 +75,36 @@ function AutoFillPanel({ onConfirm }) {
     }
   }
 
+  const handlePickResult = async (candidate) => {
+    setState('loading-detail')
+    try {
+      const detail = await fetchRelease(candidate.mbid)
+      const cover = await fetchCoverAsBase64(candidate.mbid)
+      setPreview({ ...detail, coverImage: cover })
+      setState('preview')
+    } catch (err) {
+      setErrorMsg(
+        err.message === 'Rate limited'
+          ? 'Too many requests. Wait a moment and try again.'
+          : 'Failed to load album details. Try again.'
+      )
+      setState('error')
+    }
+  }
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSearch()
   }
 
   const handleReset = () => {
     setState('idle')
+    setResults([])
     setPreview(null)
     setErrorMsg('')
   }
+
+  const isSearching = state === 'loading' || state === 'loading-detail'
+  const canSearch = !isSearching && artist.trim() && album.trim()
 
   return (
     <div>
@@ -91,7 +115,7 @@ function AutoFillPanel({ onConfirm }) {
           onChange={e => setArtist(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Artist name"
-          disabled={state === 'loading'}
+          disabled={isSearching}
         />
         <input
           style={inputStyle}
@@ -99,7 +123,7 @@ function AutoFillPanel({ onConfirm }) {
           onChange={e => setAlbum(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Album title"
-          disabled={state === 'loading'}
+          disabled={isSearching}
         />
       </div>
 
@@ -107,13 +131,13 @@ function AutoFillPanel({ onConfirm }) {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={handleSearch}
-          disabled={state === 'loading' || !artist.trim() || !album.trim()}
+          disabled={!canSearch}
           style={{
             width: '100%',
             padding: '13px',
             borderRadius: '14px',
-            background: (state === 'loading' || !artist.trim() || !album.trim()) ? '#E5E5E5' : '#1A1A1A',
-            color: (state === 'loading' || !artist.trim() || !album.trim()) ? '#9A9A9A' : '#FFFFFF',
+            background: !canSearch ? '#E5E5E5' : '#1A1A1A',
+            color: !canSearch ? '#9A9A9A' : '#FFFFFF',
             fontSize: '15px',
             fontWeight: 600,
             display: 'flex',
@@ -125,13 +149,17 @@ function AutoFillPanel({ onConfirm }) {
         >
           {state === 'loading' ? (
             <>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
                 <Loader2 size={16} strokeWidth={1.5} />
               </motion.div>
-              Looking up album…
+              Searching…
+            </>
+          ) : state === 'loading-detail' ? (
+            <>
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                <Loader2 size={16} strokeWidth={1.5} />
+              </motion.div>
+              Loading details…
             </>
           ) : (
             <>
@@ -148,16 +176,77 @@ function AutoFillPanel({ onConfirm }) {
         </p>
       )}
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
+        {/* Results list */}
+        {state === 'results' && results.length > 0 && (
+          <motion.div
+            key="results"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            style={{ marginTop: '14px' }}
+          >
+            <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9A9A9A', marginBottom: '8px' }}>
+              {results.length} result{results.length !== 1 ? 's' : ''} — pick the right one
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {results.map(r => (
+                <motion.button
+                  key={r.mbid}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handlePickResult(r)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 14px',
+                    background: 'var(--color-card)',
+                    borderRadius: '14px',
+                    boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+                    textAlign: 'left',
+                    width: '100%',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '8px',
+                      background: '#E5E5E5',
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Music size={16} strokeWidth={1.5} style={{ color: '#9A9A9A' }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {r.title}
+                    </p>
+                    <p style={{ fontSize: '12px', color: '#9A9A9A', marginTop: '2px' }}>
+                      {r.artist}{r.year ? ` · ${r.year}` : ''}{r.releaseType ? ` · ${r.releaseType}` : ''}
+                    </p>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Preview */}
         {state === 'preview' && preview && (
           <motion.div
+            key="preview"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             style={{
               marginTop: '14px',
-              background: '#FFFFFF',
+              background: 'var(--color-card)',
               borderRadius: '16px',
               boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
               overflow: 'hidden',
@@ -167,15 +256,9 @@ function AutoFillPanel({ onConfirm }) {
             <div style={{ display: 'flex', gap: '14px', padding: '14px' }}>
               <div
                 style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: '10px',
-                  overflow: 'hidden',
-                  flexShrink: 0,
-                  background: '#E5E5E5',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  width: 72, height: 72, borderRadius: '10px', overflow: 'hidden',
+                  flexShrink: 0, background: '#E5E5E5',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
                 {preview.coverImage ? (
@@ -185,7 +268,7 @@ function AutoFillPanel({ onConfirm }) {
                 )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-foreground)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {preview.title}
                 </p>
                 <p style={{ fontSize: '13px', fontWeight: 300, color: '#9A9A9A', marginTop: '2px' }}>
@@ -199,7 +282,7 @@ function AutoFillPanel({ onConfirm }) {
 
             {/* Track list preview */}
             {preview.tracks.length > 0 && (
-              <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', padding: '10px 14px' }}>
+              <div style={{ borderTop: '1px solid var(--color-border)', padding: '10px 14px' }}>
                 <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9A9A9A', marginBottom: '6px' }}>
                   Tracks
                 </p>
@@ -207,14 +290,14 @@ function AutoFillPanel({ onConfirm }) {
                   {preview.tracks.map((t, i) => (
                     <div key={t.id} style={{ display: 'flex', gap: '10px', padding: '4px 0', fontSize: '13px' }}>
                       <span style={{ color: '#9A9A9A', fontWeight: 300, width: 18, flexShrink: 0 }}>{i + 1}</span>
-                      <span style={{ color: '#1A1A1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
+                      <span style={{ color: 'var(--color-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Confirm / retry */}
+            {/* Confirm / back to results */}
             <div style={{ display: 'flex', gap: '8px', padding: '10px 14px 14px' }}>
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -228,18 +311,28 @@ function AutoFillPanel({ onConfirm }) {
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                onClick={handleReset}
+                onClick={() => setState('results')}
                 style={{
                   flex: 1, padding: '11px', borderRadius: '12px',
                   background: '#E5E5E5', color: '#9A9A9A', fontSize: '14px', fontWeight: 500,
                 }}
               >
-                Try again
+                Back to results
               </motion.button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Search again link shown below results/preview */}
+      {(state === 'results' || state === 'preview') && (
+        <button
+          onClick={handleReset}
+          style={{ display: 'block', margin: '12px auto 0', fontSize: '13px', color: '#9A9A9A', fontWeight: 400 }}
+        >
+          Search again
+        </button>
+      )}
     </div>
   )
 }
@@ -328,7 +421,7 @@ export default function AddRecord() {
 
   return (
     <PageTransition>
-      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px 48px' }}>
+      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 20px 48px' }}>
 
         {/* Mode toggle */}
         {!isEditing && (

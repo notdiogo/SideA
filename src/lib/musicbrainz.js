@@ -21,39 +21,47 @@ async function mbFetch(path, retry = true) {
 }
 
 /**
- * Search MusicBrainz for a release and return its full details.
- * Returns { mbid, title, artist, year, tracks: [{ id, title }] }
+ * Search MusicBrainz and return up to 8 candidate releases.
+ * Returns [{ mbid, title, artist, year, releaseType }]
  * Throws if nothing found.
  */
-export async function searchRelease(artist, album) {
+export async function searchReleases(artist, album) {
   const q = encodeURIComponent(`artist:"${artist}" AND release:"${album}"`)
-  const search = await mbFetch(`/release/?query=${q}&fmt=json&limit=5`)
+  const search = await mbFetch(`/release/?query=${q}&fmt=json&limit=8`)
 
   const releases = search.releases ?? []
   if (releases.length === 0) throw new Error('No album found')
 
-  const top = releases[0]
-  const mbid = top.id
-  const title = top.title
-  const artistName = top['artist-credit']?.[0]?.name ?? artist
-  const date = top.date ?? ''
-  const year = date.slice(0, 4) || ''
+  return releases.map(r => ({
+    mbid: r.id,
+    title: r.title,
+    artist: r['artist-credit']?.[0]?.name ?? artist,
+    year: (r.date ?? '').slice(0, 4) || '',
+    releaseType: r['release-group']?.['primary-type'] ?? '',
+  }))
+}
 
-  // Small delay to respect MusicBrainz rate limit (1 req/sec)
+/**
+ * Fetch full release details (tracklist) for a given MusicBrainz release ID.
+ * Returns { mbid, title, artist, year, tracks: [{ id, title }] }
+ */
+export async function fetchRelease(mbid) {
   await sleep(1000)
-
-  // Fetch full release to get tracklist
   const detail = await mbFetch(`/release/${mbid}?inc=recordings&fmt=json`)
   const media = detail.media ?? []
   const rawTracks = media.flatMap(m => m.tracks ?? [])
 
-  const tracks = rawTracks.map(t => ({
-    id: t.recording?.id ?? t.id ?? String(t.position),
-    title: t.title,
-    lyrics: '',
-  }))
-
-  return { mbid, title, artist: artistName, year, tracks }
+  return {
+    mbid,
+    title: detail.title,
+    artist: detail['artist-credit']?.[0]?.name ?? '',
+    year: (detail.date ?? '').slice(0, 4) || '',
+    tracks: rawTracks.map(t => ({
+      id: t.recording?.id ?? t.id ?? String(t.position),
+      title: t.title,
+      lyrics: '',
+    })),
+  }
 }
 
 /**
