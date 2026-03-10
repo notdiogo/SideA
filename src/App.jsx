@@ -2,16 +2,20 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useCollection } from './hooks/useCollection'
+import { useAuth } from './hooks/useAuth'
+import { supabase } from './lib/supabase'
 import AppShell from './components/layout/AppShell'
 import Wall from './pages/Wall'
 import AddRecord from './pages/AddRecord'
 import AlbumDetail from './pages/AlbumDetail'
 import Lyrics from './pages/Lyrics'
+import Login from './pages/Login'
 
 export const CollectionContext = createContext(null)
 export const useCollectionContext = () => useContext(CollectionContext)
 
 export default function App() {
+  const session = useAuth()
   const collection = useCollection()
   const location = useLocation()
 
@@ -35,8 +39,16 @@ export default function App() {
     localStorage.setItem('viewMode', viewMode)
   }, [viewMode])
 
+  // Still resolving auth state — render nothing to avoid flash
+  if (session === undefined) return null
+
+  // Not authenticated — show login screen (outside AppShell so no nav bar)
+  if (session === null) return <Login />
+
+  const signOut = () => supabase.auth.signOut()
+
   return (
-    <CollectionContext.Provider value={{ ...collection, viewMode, setViewMode, theme, setTheme }}>
+    <CollectionContext.Provider value={{ ...collection, viewMode, setViewMode, theme, setTheme, signOut }}>
       <AppShell>
         <AnimatePresence mode="wait" initial={false}>
           <Routes location={location} key={location.pathname}>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ChevronLeft, MoreHorizontal, Plus, List, LayoutGrid, Moon, Sun } from 'lucide-react'
+import { ChevronLeft, MoreHorizontal, Plus, List, LayoutGrid, Moon, Sun, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCollectionContext } from '../../App'
 
@@ -19,7 +19,7 @@ const menuItemStyle = {
 export default function AppShell({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { viewMode, setViewMode, theme, setTheme } = useCollectionContext()
+  const { viewMode, setViewMode, theme, setTheme, signOut } = useCollectionContext()
   const isHome = location.pathname === '/'
   const isLyrics = /\/track\//.test(location.pathname)
 
@@ -176,12 +176,22 @@ export default function AppShell({ children }) {
                         setShowOptions(false)
                         setTheme(t => t === 'day' ? 'night' : 'day')
                       }}
-                      style={menuItemStyle}
+                      style={{ ...menuItemStyle, borderBottom: '1px solid var(--color-border)' }}
                     >
                       {theme === 'day'
                         ? <Moon size={14} strokeWidth={1.5} />
                         : <Sun size={14} strokeWidth={1.5} />}
                       {theme === 'day' ? 'Night theme' : 'Day theme'}
+                    </button>
+
+                    {/* Sign out */}
+                    <button
+                      type="button"
+                      onClick={() => { setShowOptions(false); signOut() }}
+                      style={{ ...menuItemStyle, color: 'oklch(55% 0.18 25)' }}
+                    >
+                      <LogOut size={14} strokeWidth={1.5} />
+                      Sign out
                     </button>
                   </motion.div>
                 )}
