@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-  base: '/SideA/',
+  base: '/',
   plugins: [
     tailwindcss(),
     react(),
@@ -23,8 +23,8 @@ export default defineConfig({
         background_color: '#0f0d08',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/SideA/',
-        scope: '/SideA/',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'icons/icon-192.png',
