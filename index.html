@@ -27,7 +27,7 @@
           var path = qIndex >= 0 ? decoded.slice(0, qIndex) : decoded;
           var query = qIndex >= 0 ? '?' + decoded.slice(qIndex + 3) : '';
           history.replaceState(null, null,
-            location.pathname.split('?')[0] + path + query + location.hash
+            '/' + path.replace(/^\//, '') + query + location.hash
           );
         }
       })();
