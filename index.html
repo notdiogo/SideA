@@ -27,14 +27,14 @@
           var path = qIndex >= 0 ? decoded.slice(0, qIndex) : decoded;
           var query = qIndex >= 0 ? '?' + decoded.slice(qIndex + 3) : '';
           history.replaceState(null, null,
-            '/' + path.replace(/^\//, '') + query + location.hash
+            location.pathname.split('?')[0] + path + query + location.hash
           );
         }
       })();
     </script>
-    <script type="module" crossorigin src="/assets/index-Dg_4PuuJ.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Bzu51p-A.css">
-  <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+    <script type="module" crossorigin src="/SideA/assets/index-B6Sooier.js"></script>
+    <link rel="stylesheet" crossorigin href="/SideA/assets/index-DCJQ9beI.css">
+  <link rel="manifest" href="/SideA/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/SideA/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
   </body>
