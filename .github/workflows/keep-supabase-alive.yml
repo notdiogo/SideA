@@ -2,24 +2,29 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # Runs every 5 days at 9:00 AM UTC
-    - cron: '0 9 */5 * *'
+    - cron: '0 9 * * *'   # daily at 09:00 UTC
   workflow_dispatch: # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: write          # needed for the keepalive dummy commit
 
 jobs:
   ping-supabase:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase to prevent auto-pause
+      - uses: actions/checkout@v4
+
+      - name: Query Supabase DB to reset the inactivity timer
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/" \
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/albums?select=id&limit=1" \
             -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}")
-
-          if [ "$response" -eq 200 ]; then
-            echo "Supabase ping successful (HTTP $response)"
-          else
-            echo "Supabase ping failed (HTTP $response)"
-            exit 1
+          echo "HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "Supabase query failed (HTTP $code)"; exit 1
           fi
+          echo "Supabase query succeeded — DB activity registered."
+
+      - name: Keep the scheduled workflow from being auto-disabled
+        uses: gautamkrishnar/keepalive-workflow@v2
