@@ -5,26 +5,20 @@ on:
     - cron: '0 9 * * *'   # daily at 09:00 UTC
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
-permissions:
-  contents: write          # needed for the keepalive dummy commit
-
 jobs:
   ping-supabase:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       - name: Query Supabase DB to reset the inactivity timer
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" \
+          code=$(curl -s -o /tmp/body.txt -w "%{http_code}" \
             "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/albums?select=id&limit=1" \
             -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}")
           echo "HTTP $code"
+          cat /tmp/body.txt
           if [ "$code" != "200" ]; then
-            echo "Supabase query failed (HTTP $code)"; exit 1
+            echo "Supabase query failed (HTTP $code) — project may be paused or secrets are wrong."
+            exit 1
           fi
-          echo "Supabase query succeeded — DB activity registered."
-
-      - name: Keep the scheduled workflow from being auto-disabled
-        uses: gautamkrishnar/keepalive-workflow@v2
+          echo "Supabase query succeeded — database activity registered."
