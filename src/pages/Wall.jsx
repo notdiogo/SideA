@@ -38,7 +38,9 @@ const TILT_DEG    = 20    // rotateY at one slot away
 const RENDER_R    = 3     // render ±3 slots (invisible beyond ±2)
 const VISIBLE_R   = 2
 const FLICK_PROJ  = 0.2   // slots of travel per (slot/s) of release velocity
-const DIVE_AT     = 1.22  // pinch scale that commits to opening the album
+const OPEN_DIST   = 90    // px of upward drag that commits to opening the album
+const OPEN_VEL    = 500   // px/s upward flick that opens it from a shorter drag
+const LIFT_RANGE  = 170   // px of travel over which the lift effect reaches full strength
 const SPRING      = { type: 'spring', stiffness: 260, damping: 30 }
 
 // Module-level: persists across React Router navigation, resets on page refresh.
@@ -49,21 +51,25 @@ const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion:
 
 // One cover. Its transform is derived from the shared continuous position `pos`,
 // so it tracks the finger 1:1 while dragging and springs on release.
-function CarouselCard({ album, albumIdx, n, pos, fan, reveal, cardSize, reflectionH, isCurrent }) {
+function CarouselCard({ album, albumIdx, n, pos, fan, reveal, liftY, cardSize, reflectionH, isCurrent }) {
   const flight  = useFlight()
   const d       = useTransform(pos, p => wrapDelta(albumIdx - p, n))
   // fan: 0 = every cover stacked behind the centre one, 1 = fully fanned out
   const x       = useTransform([d, fan], ([v, f]) => clamp(v, -VISIBLE_R, VISIBLE_R) * cardSize * SPACING * f)
-  const scale   = useTransform([d, fan], ([v, f]) => 1 - Math.min(Math.abs(v), VISIBLE_R) * SCALE_DRP * f)
+  // lift: the centre cover follows an upward drag 1:1 and swells slightly as it rises
+  const y       = useTransform([d, liftY], ([v, ly]) => (Math.abs(v) < 0.5 ? ly : 0))
+  const scale   = useTransform([d, fan, liftY], ([v, f, ly]) =>
+    (1 - Math.min(Math.abs(v), VISIBLE_R) * SCALE_DRP * f) * (Math.abs(v) < 0.5 ? 1 + 0.08 * clamp(-ly / LIFT_RANGE, 0, 1) : 1))
   const rotateY = useTransform([d, fan], ([v, f]) => -clamp(v, -1, 1) * TILT_DEG * f)
   const zIndex  = useTransform(d, v => Math.round(10 - Math.abs(v) * 2))
   // The centre cover fades in first (reveal); the others fade in as they slide out (fan)
-  const opacity = useTransform([d, fan, reveal], ([v, f, r]) => {
+  const opacity = useTransform([d, fan, reveal, liftY], ([v, f, r, ly]) => {
     const a = Math.abs(v)
     const base = a <= VISIBLE_R
       ? 1 - a * OPACITY_DRP
       : Math.max(0, (1 - VISIBLE_R * OPACITY_DRP) * (RENDER_R - a))
-    return base * (a < 0.5 ? r : f)
+    // Neighbours recede while the centre cover is lifted
+    return base * (a < 0.5 ? r : f * (1 - clamp(-ly / LIFT_RANGE, 0, 1)))
   })
 
   return (
@@ -73,7 +79,7 @@ function CarouselCard({ album, albumIdx, n, pos, fan, reveal, cardSize, reflecti
         left:       '50%',
         marginLeft: -cardSize / 2,
         top:         0,
-        x, scale, rotateY, opacity, zIndex,
+        x, y, scale, rotateY, opacity, zIndex,
         willChange: 'transform',
         cursor:     isCurrent ? 'pointer' : 'default',
       }}
@@ -83,7 +89,7 @@ function CarouselCard({ album, albumIdx, n, pos, fan, reveal, cardSize, reflecti
         data-cover-slot={album.id}
         data-cover-page="wall"
         style={{
-          opacity:      flight?.id === album.id && flight.dir === 'out' ? 0 : 1,
+          opacity:      flight?.id === album.id ? 0 : 1,
           width:        cardSize,
           height:       cardSize,
           borderRadius: 8,
@@ -143,7 +149,7 @@ export default function Wall() {
 
   // pos: continuous carousel position in slots (unbounded; wraps via modulo)
   const pos  = useMotionValue(_carouselIndex ?? 0)
-  // dive: pinch-out zoom of the whole carousel (1 = rest)
+  // dive: settle scale for the landing intro (1 = rest)
   const dive = useMotionValue(1)
   // Landing intro: the centre record fades in, then the neighbours fan out from behind it.
   // Skipped (already 1) when coming back from an album so the cover can fly home.
@@ -151,12 +157,13 @@ export default function Wall() {
   const settled = _carouselIndex !== null && Boolean(from?.startsWith('/album'))
   const reveal = useMotionValue(settled ? 1 : 0)
   const fan    = useMotionValue(settled ? 1 : 0)
-  const labelOpacity = useTransform([dive, reveal], ([dv, r]) => r * (1 - clamp((dv - 1) / 0.3, 0, 1)))
+  // liftY: how far the centre cover has been dragged up (px, ≤ 0 opens the album)
+  const liftY  = useMotionValue(0)
+  const labelOpacity = useTransform([reveal, liftY], ([r, ly]) => r * (1 - clamp(-ly / (LIFT_RANGE * 0.6), 0, 1)))
   const [index, setIndex] = useState(_carouselIndex ?? 0)
   const areaRef  = useRef(null)
   const anim     = useRef(null)
   const startPos = useRef(0)
-  const pinching = useRef(false)
   const moved    = useRef(false)
 
   // Mirror the rounded position into React state (label, reflection, render window)
@@ -215,12 +222,14 @@ export default function Wall() {
   }, [n])
 
   const step = cardSize * SPACING
-  const openCurrent = () => {
+  // Opens the focused album. The flight starts from the cover's *current* box (including any
+  // lift) and inherits the release velocity, so the hand-off from finger to animation is seamless.
+  const openCurrent = (velocityY = 0) => {
     const album = sorted[index]
     if (!album) return
     const el = coverEl(album.id, 'wall')
     if (el && album.coverImage) {
-      startFlight({ id: album.id, src: album.coverImage, dir: 'in', from: rectOf(el) })
+      startFlight({ id: album.id, src: album.coverImage, dir: 'in', from: rectOf(el), velocityY })
     }
     navigate(`/album/${album.id}`)
   }
@@ -240,19 +249,30 @@ export default function Wall() {
 
   // Tap (a click that wasn't a drag/pinch): open the centre cover, or bring a side cover forward
   const onAreaClick = (e) => {
-    if (moved.current || pinching.current) return
+    if (moved.current) return
     const rect = areaRef.current.getBoundingClientRect()
     const dx = e.clientX - (rect.left + rect.width / 2)
     if (Math.abs(dx) <= cardSize / 2) openCurrent()
     else goTo(clamp(Math.round(dx / step), -2, 2))
   }
 
+  const liftAnim = useRef(null)
   const bind = useGesture(
     {
-      onDrag: ({ first, last, movement: [mx], velocity: [vx], direction: [dirx], pinching: isPinching, cancel }) => {
-        if (isPinching || pinching.current) { cancel(); return }
+      onDrag: ({ first, last, axis, movement: [mx, my], velocity: [vx, vy], direction: [dirx, diry], cancel }) => {
         moved.current = true
-        if (n < 2) return
+        if (axis === 'y') {
+          // ── Swipe up: the centre cover follows the finger; release past the threshold opens it
+          if (first) { anim.current?.stop(); liftAnim.current?.stop() }
+          liftY.set(my < 0 ? my : my * 0.25) // dragging down only gives a little resistance
+          if (!last) return
+          const vY = diry * vy * 1000 // px/s, negative = upward
+          if (my < -OPEN_DIST || (vY < -OPEN_VEL && my < -24)) openCurrent(vY)
+          else liftAnim.current = animate(liftY, 0, { type: 'spring', stiffness: 380, damping: 36, velocity: vY })
+          return
+        }
+        if (axis !== 'x' || n < 2) return
+        // ── Horizontal: the carousel follows the finger 1:1
         if (first) { anim.current?.stop(); startPos.current = pos.get() }
         if (!last) { pos.set(startPos.current - mx / step); return }
         // Release: project momentum, snap to the nearest slot, hand off velocity
@@ -261,17 +281,9 @@ export default function Wall() {
         const target = Math.round(clamp(cur + v * FLICK_PROJ, cur - 4, cur + 4))
         anim.current = animate(pos, target, { ...SPRING, velocity: v })
       },
-      onPinchStart: () => { pinching.current = true; anim.current?.stop() },
-      onPinch: ({ offset: [s] }) => dive.set(clamp(s, 0.92, 2.4)),
-      onPinchEnd: () => {
-        pinching.current = false
-        if (dive.get() > DIVE_AT) openCurrent()
-        else animate(dive, 1, { type: 'spring', stiffness: 300, damping: 30 })
-      },
     },
     {
-      drag:  { threshold: 6 },
-      pinch: { from: () => [1, 0], scaleBounds: { min: 0.92, max: 2.4 }, rubberband: true },
+      drag: { threshold: 6, axis: 'lock' },
       eventOptions: { passive: false },
     }
   )
@@ -349,6 +361,7 @@ export default function Wall() {
                 pos={pos}
                 fan={fan}
                 reveal={reveal}
+                liftY={liftY}
                 cardSize={cardSize}
                 reflectionH={reflectionH}
                 isCurrent={albumIdx === index}
