@@ -62,7 +62,7 @@ export default function ImageUpload({ value, onChange }) {
         style={{ display: 'none' }}
       />
       <motion.div
-        whileTap={{ scale: 0.98 }}
+        whileTap={{ scale: 0.96 }}
         onClick={() => inputRef.current?.click()}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -75,9 +75,9 @@ export default function ImageUpload({ value, onChange }) {
           cursor: 'pointer',
           position: 'relative',
           border: isDragging
-            ? '2px solid #1A1A1A'
+            ? '2px solid var(--color-primary)'
             : value ? 'none' : '2px dashed rgba(0,0,0,0.15)',
-          background: value ? 'transparent' : '#FFFFFF',
+          background: value ? 'transparent' : 'var(--color-card)',
           transition: 'border-color 0.2s',
           boxShadow: value ? '0 8px 32px rgba(0,0,0,0.1)' : '0 2px 12px rgba(0,0,0,0.06)',
         }}

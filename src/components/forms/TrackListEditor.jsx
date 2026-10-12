@@ -67,7 +67,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
           {/* Lyrics toggle */}
           <motion.button
             type="button"
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => setExpanded(v => !v)}
             style={{
               display: 'flex',
@@ -82,7 +82,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
           {/* Delete */}
           <motion.button
             type="button"
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => onDelete(track.id)}
             style={{
               display: 'flex',
@@ -167,7 +167,7 @@ export default function TrackListEditor({ tracks, onChange }) {
       </Reorder.Group>
 
       <motion.button
-        whileTap={{ scale: 0.97 }}
+        whileTap={{ scale: 0.96 }}
         onClick={handleAdd}
         style={{
           display: 'flex',

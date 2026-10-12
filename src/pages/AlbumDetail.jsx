@@ -121,7 +121,7 @@ export default function AlbumDetail() {
       >
         <motion.button
           type="button"
-          whileTap={{ scale: 0.92 }}
+          whileTap={{ scale: 0.96 }}
           onClick={() => setShowOptions(v => !v)}
           style={{
             display:        'flex',

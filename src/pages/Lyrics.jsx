@@ -194,7 +194,7 @@ export default function Lyrics() {
             {navDots}
             <div style={{ display: 'flex', gap: 8 }}>
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={goPrev}
                 disabled={isPrevDisabled}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isPrevDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isPrevDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
@@ -202,7 +202,7 @@ export default function Lyrics() {
                 <ChevronLeft size={20} strokeWidth={1.5} />
               </motion.button>
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={goNext}
                 disabled={isNextDisabled}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isNextDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isNextDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
@@ -298,7 +298,7 @@ export default function Lyrics() {
         }}
       >
         <motion.button
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.96 }}
           onClick={goPrev}
           disabled={isPrevDisabled}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isPrevDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isPrevDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
@@ -314,7 +314,7 @@ export default function Lyrics() {
         </div>
 
         <motion.button
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.96 }}
           onClick={goNext}
           disabled={isNextDisabled}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isNextDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isNextDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}

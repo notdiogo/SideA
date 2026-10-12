@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, MotionConfig } from 'framer-motion'
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useCollection } from './hooks/useCollection'
 import AppShell from './components/layout/AppShell'
@@ -38,6 +38,7 @@ export default function App() {
 
   return (
     <CollectionContext.Provider value={{ ...collection, viewMode, setViewMode, theme, setTheme }}>
+      <MotionConfig reducedMotion="user">
       <AppShell>
         <AnimatePresence mode="wait" initial={false}>
           <Routes location={location} key={location.pathname}>
@@ -50,6 +51,7 @@ export default function App() {
           </Routes>
         </AnimatePresence>
       </AppShell>
+      </MotionConfig>
     </CollectionContext.Provider>
   )
 }

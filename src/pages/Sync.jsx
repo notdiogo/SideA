@@ -99,7 +99,7 @@ function SignIn() {
       )}
       {error && <p style={{ fontSize: 13, color: 'oklch(55% 0.18 25)', margin: 0 }}>{error}</p>}
       <motion.button
-        whileTap={{ scale: 0.97 }} type="submit"
+        whileTap={{ scale: 0.96 }} type="submit"
         disabled={busy || !(step === 'email' ? email.trim() : code.trim())}
         style={buttonStyle(busy || !(step === 'email' ? email.trim() : code.trim()))}
       >
@@ -144,7 +144,7 @@ export default function Sync() {
                 {session.user.email} · {albums.length} albums on this device
               </p>
             </div>
-            <motion.button whileTap={{ scale: 0.97 }} type="button" onClick={sync} style={buttonStyle(false)}>
+            <motion.button whileTap={{ scale: 0.96 }} type="button" onClick={sync} style={buttonStyle(false)}>
               Sync now
             </motion.button>
             <button type="button" style={{ fontSize: 13, color: 'var(--color-muted-foreground)' }}
@@ -160,7 +160,7 @@ export default function Sync() {
           <p style={{ fontSize: 13, fontWeight: 300, color: 'var(--color-muted-foreground)', lineHeight: 1.5, margin: 0 }}>
             Your collection is stored on this device and works offline. Download a backup copy any time.
           </p>
-          <motion.button whileTap={{ scale: 0.97 }} type="button" onClick={download} style={buttonStyle(false)}>
+          <motion.button whileTap={{ scale: 0.96 }} type="button" onClick={download} style={buttonStyle(false)}>
             Export backup (JSON)
           </motion.button>
         </div>

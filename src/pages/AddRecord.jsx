@@ -30,7 +30,7 @@ function Field({ label, error, children }) {
           fontWeight: 500,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
-          color: '#9A9A9A',
+          color: 'var(--color-muted-foreground)',
         }}
       >
         {label}
@@ -102,15 +102,15 @@ function AutoFillPanel({ onConfirm }) {
 
       {state !== 'preview' && (
         <motion.button
-          whileTap={{ scale: 0.97 }}
+          whileTap={state === 'loading' || !artist.trim() || !album.trim() ? undefined : { scale: 0.96 }}
           onClick={handleSearch}
           disabled={state === 'loading' || !artist.trim() || !album.trim()}
           style={{
             width: '100%',
             padding: '13px',
             borderRadius: '14px',
-            background: (state === 'loading' || !artist.trim() || !album.trim()) ? '#E5E5E5' : '#1A1A1A',
-            color: (state === 'loading' || !artist.trim() || !album.trim()) ? '#9A9A9A' : '#FFFFFF',
+            background: (state === 'loading' || !artist.trim() || !album.trim()) ? 'var(--color-secondary)' : 'var(--color-primary)',
+            color: (state === 'loading' || !artist.trim() || !album.trim()) ? 'var(--color-muted-foreground)' : 'var(--color-primary-foreground)',
             fontSize: '15px',
             fontWeight: 600,
             display: 'flex',
@@ -154,7 +154,7 @@ function AutoFillPanel({ onConfirm }) {
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             style={{
               marginTop: '14px',
-              background: '#FFFFFF',
+              background: 'var(--color-card)',
               borderRadius: '16px',
               boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
               overflow: 'hidden',
@@ -169,7 +169,7 @@ function AutoFillPanel({ onConfirm }) {
                   borderRadius: '10px',
                   overflow: 'hidden',
                   flexShrink: 0,
-                  background: '#E5E5E5',
+                  background: 'var(--color-secondary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -178,17 +178,17 @@ function AutoFillPanel({ onConfirm }) {
                 {preview.coverImage ? (
                   <img src={preview.coverImage} alt={preview.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <Music size={24} strokeWidth={1.5} style={{ color: '#9A9A9A' }} />
+                  <Music size={24} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
                 )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-foreground)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {preview.title}
                 </p>
-                <p style={{ fontSize: '13px', fontWeight: 300, color: '#9A9A9A', marginTop: '2px' }}>
+                <p style={{ fontSize: '13px', fontWeight: 300, color: 'var(--color-muted-foreground)', marginTop: '2px' }}>
                   {preview.artist}
                 </p>
-                <p style={{ fontSize: '12px', color: '#9A9A9A', marginTop: '6px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--color-muted-foreground)', marginTop: '6px' }}>
                   {preview.year && `${preview.year} · `}{preview.tracks.length} tracks
                 </p>
               </div>
@@ -197,14 +197,14 @@ function AutoFillPanel({ onConfirm }) {
             {/* Track list preview */}
             {preview.tracks.length > 0 && (
               <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', padding: '10px 14px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9A9A9A', marginBottom: '6px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '6px' }}>
                   Tracks
                 </p>
                 <div style={{ maxHeight: 120, overflowY: 'auto' }}>
                   {preview.tracks.map((t, i) => (
                     <div key={t.id} style={{ display: 'flex', gap: '10px', padding: '4px 0', fontSize: '13px' }}>
-                      <span style={{ color: '#9A9A9A', fontWeight: 300, width: 18, flexShrink: 0 }}>{i + 1}</span>
-                      <span style={{ color: '#1A1A1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
+                      <span style={{ color: 'var(--color-muted-foreground)', fontWeight: 300, width: 18, flexShrink: 0 }}>{i + 1}</span>
+                      <span style={{ color: 'var(--color-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
                     </div>
                   ))}
                 </div>
@@ -214,21 +214,21 @@ function AutoFillPanel({ onConfirm }) {
             {/* Confirm / retry */}
             <div style={{ display: 'flex', gap: '8px', padding: '10px 14px 14px' }}>
               <motion.button
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => onConfirm(preview)}
                 style={{
                   flex: 1, padding: '11px', borderRadius: '12px',
-                  background: '#1A1A1A', color: '#FFFFFF', fontSize: '14px', fontWeight: 600,
+                  background: 'var(--color-primary)', color: 'var(--color-primary-foreground)', fontSize: '14px', fontWeight: 600,
                 }}
               >
                 Use this album
               </motion.button>
               <motion.button
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={handleReset}
                 style={{
                   flex: 1, padding: '11px', borderRadius: '12px',
-                  background: '#E5E5E5', color: '#9A9A9A', fontSize: '14px', fontWeight: 500,
+                  background: 'var(--color-secondary)', color: 'var(--color-muted-foreground)', fontSize: '14px', fontWeight: 500,
                 }}
               >
                 Try again
@@ -340,7 +340,7 @@ export default function AddRecord() {
           <div
             style={{
               display: 'flex',
-              background: '#E5E5E5',
+              background: 'var(--color-secondary)',
               borderRadius: '12px',
               padding: '3px',
               marginBottom: '24px',
@@ -349,14 +349,14 @@ export default function AddRecord() {
             {['autofill', 'manual'].map(m => (
               <motion.button
                 key={m}
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => setMode(m)}
                 style={{
                   flex: 1,
                   padding: '8px',
                   borderRadius: '10px',
-                  background: mode === m ? '#FFFFFF' : 'transparent',
-                  color: mode === m ? '#1A1A1A' : '#9A9A9A',
+                  background: mode === m ? 'var(--color-card)' : 'transparent',
+                  color: mode === m ? 'var(--color-foreground)' : 'var(--color-muted-foreground)',
                   fontSize: '14px',
                   fontWeight: mode === m ? 600 : 400,
                   boxShadow: mode === m ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
@@ -383,10 +383,10 @@ export default function AddRecord() {
                   marginBottom: '20px',
                   padding: '10px 14px',
                   borderRadius: '10px',
-                  background: '#FFFFFF',
+                  background: 'var(--color-card)',
                   boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
                   fontSize: '13px',
-                  color: '#9A9A9A',
+                  color: 'var(--color-muted-foreground)',
                   fontWeight: 300,
                 }}
               >
@@ -428,19 +428,19 @@ export default function AddRecord() {
             </div>
 
             <div style={{ marginBottom: '32px' }}>
-              <h3 style={{ fontSize: '12px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9A9A9A', marginBottom: '12px' }}>
+              <h3 style={{ fontSize: '12px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '12px' }}>
                 Track list
               </h3>
               <TrackListEditor tracks={form.tracks} onChange={set('tracks')} />
             </div>
 
             <motion.button
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.96 }}
               type="submit"
               disabled={saving}
               style={{
                 width: '100%', padding: '14px', borderRadius: '14px',
-                background: '#1A1A1A', color: '#FFFFFF', fontSize: '15px', fontWeight: 600,
+                background: 'var(--color-primary)', color: 'var(--color-primary-foreground)', fontSize: '15px', fontWeight: 600,
                 cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'opacity 0.2s',
               }}
             >

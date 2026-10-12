@@ -75,7 +75,7 @@ export default function AppShell({ children }) {
         <div style={{ minWidth: 80, display: 'flex', alignItems: 'center' }}>
           {!isHome && (
             <motion.button
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => navigate(-1)}
               style={{
                 display:        'flex',
@@ -111,7 +111,7 @@ export default function AppShell({ children }) {
           {isHome && (
             <div ref={optionsRef} style={{ position: 'relative' }}>
               <motion.button
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => setShowOptions(v => !v)}
                 style={{
                   display:        'flex',
