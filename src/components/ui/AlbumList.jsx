@@ -234,7 +234,7 @@ export default function AlbumList({ albums, onOpen }) {
         </div>
       </div>
 
-      <div style={{ width: '100%', maxWidth: 640, margin: '0 auto', padding: '0 20px calc(48px + env(safe-area-inset-bottom))' }}>
+      <div style={{ width: '100%', maxWidth: 640, margin: '0 auto', padding: '0 20px calc(var(--tabbar-h, 0px) + 32px)' }}>
         <p style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', paddingTop: 6, fontVariantNumeric: 'tabular-nums' }}>
           {total} {total === 1 ? 'album' : 'albums'}
         </p>

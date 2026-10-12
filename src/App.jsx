@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useCollection } from './hooks/useCollection'
@@ -9,7 +9,7 @@ import Wall from './pages/Wall'
 import AddRecord from './pages/AddRecord'
 import AlbumDetail from './pages/AlbumDetail'
 import Lyrics from './pages/Lyrics'
-import Sync from './pages/Sync'
+import Profile from './pages/Profile'
 
 export const CollectionContext = createContext(null)
 export const useCollectionContext = () => useContext(CollectionContext)
@@ -50,7 +50,8 @@ export default function App() {
           >
             <Routes location={location}>
               <Route path="/"                                element={<Wall />} />
-              <Route path="/sync"                            element={<Sync />} />
+              <Route path="/profile"                         element={<Profile />} />
+              <Route path="/sync"                            element={<Navigate to="/profile" replace />} />
               <Route path="/add"                             element={<AddRecord />} />
               <Route path="/album/:albumId"                  element={<AlbumDetail />} />
               <Route path="/album/:albumId/edit"             element={<AddRecord />} />

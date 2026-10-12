@@ -324,7 +324,7 @@ export default function AddRecord() {
       })
     } else {
       const album = await addAlbum(albumData)
-      navigate(`/album/${album.id}`)
+      navigate(`/album/${album.id}`, { replace: true })
       // Prefetch all track lyrics in the background after navigation
       prefetchAlbumLyrics(album.artist, album.tracks).then(tracksWithLyrics => {
         updateAlbum({ ...album, tracks: tracksWithLyrics })
@@ -334,7 +334,7 @@ export default function AddRecord() {
 
   return (
     <PageTransition>
-      <div style={{ width: '100%', maxWidth: '640px', margin: '0 auto', padding: '28px 20px 64px' }}>
+      <div style={{ width: '100%', maxWidth: '640px', margin: '0 auto', padding: '28px 20px calc(var(--tabbar-h, 0px) + 48px)' }}>
 
         {/* Mode toggle */}
         {!isEditing && (

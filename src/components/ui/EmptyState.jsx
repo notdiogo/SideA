@@ -48,7 +48,7 @@ export default function EmptyState({ signedOut = false }) {
       </Link>
       {signedOut && (
         <Link
-          to="/sync"
+          to="/profile"
           className="text-sm transition-opacity hover:opacity-80"
           style={{ color: 'var(--color-muted-foreground)' }}
         >

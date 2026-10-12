@@ -240,7 +240,7 @@ export default function Wall() {
   if (loading || !authReady) {
     return (
       <PageTransition>
-        <div style={{ height: 'calc(100dvh - var(--nav-height))' }} />
+        <div style={{ height: 'calc(100dvh - var(--nav-height) - var(--tabbar-h, 0px))' }} />
       </PageTransition>
     )
   }
@@ -271,7 +271,7 @@ export default function Wall() {
     <PageTransition>
       <div
         style={{
-          height: 'calc(100dvh - var(--nav-height))',
+          height: 'calc(100dvh - var(--nav-height) - var(--tabbar-h, 0px))',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

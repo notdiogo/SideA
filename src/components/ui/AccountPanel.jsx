@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
-import { useCollectionContext } from '../App'
-import PageTransition from '../components/layout/PageTransition'
+import { supabase } from '../../lib/supabase'
+import { useCollectionContext } from '../../App'
 
 const STATUS_LABEL = {
   'signed-out': 'Not syncing',
@@ -120,9 +118,8 @@ function SignIn() {
   )
 }
 
-export default function Sync() {
+export default function AccountPanel() {
   const { session, status, sync, exportJson, albums } = useCollectionContext()
-  const navigate = useNavigate()
 
   const download = async () => {
     const url = URL.createObjectURL(await exportJson())
@@ -134,37 +131,35 @@ export default function Sync() {
   }
 
   return (
-    <PageTransition>
-      <div style={{ width: '100%', maxWidth: 420, margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {session ? (
-          <div style={cardStyle}>
-            <div>
-              <p style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{STATUS_LABEL[status]}</p>
-              <p style={{ fontSize: 13, fontWeight: 300, color: 'var(--color-muted-foreground)', margin: '4px 0 0' }}>
-                {session.user.email} · {albums.length} albums on this device
-              </p>
-            </div>
-            <motion.button whileTap={{ scale: 0.96 }} type="button" onClick={sync} style={buttonStyle(false)}>
-              Sync now
-            </motion.button>
-            <button type="button" style={{ fontSize: 13, color: 'var(--color-muted-foreground)' }}
-              onClick={async () => { await supabase.auth.signOut(); navigate('/') }}>
-              Sign out
-            </button>
-          </div>
-        ) : (
-          <SignIn />
-        )}
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {session ? (
         <div style={cardStyle}>
-          <p style={{ fontSize: 13, fontWeight: 300, color: 'var(--color-muted-foreground)', lineHeight: 1.5, margin: 0 }}>
-            Your collection is stored on this device and works offline. Download a backup copy any time.
-          </p>
-          <motion.button whileTap={{ scale: 0.96 }} type="button" onClick={download} style={buttonStyle(false)}>
-            Export backup (JSON)
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 500, letterSpacing: '-0.015em', margin: 0 }}>{STATUS_LABEL[status]}</p>
+            <p style={{ fontSize: 13, fontWeight: 300, color: 'var(--color-muted-foreground)', margin: '4px 0 0' }}>
+              {session.user.email} · {albums.length} albums on this device
+            </p>
+          </div>
+          <motion.button whileTap={{ scale: 0.96 }} type="button" onClick={sync} style={buttonStyle(false)}>
+            Sync now
           </motion.button>
+          <button type="button" style={{ fontSize: 13, color: 'var(--color-muted-foreground)' }}
+            onClick={() => supabase.auth.signOut()}>
+            Sign out
+          </button>
         </div>
+      ) : (
+        <SignIn />
+      )}
+
+      <div style={cardStyle}>
+        <p style={{ fontSize: 13, fontWeight: 300, color: 'var(--color-muted-foreground)', lineHeight: 1.5, margin: 0 }}>
+          Your collection is stored on this device and works offline. Download a backup copy any time.
+        </p>
+        <motion.button whileTap={{ scale: 0.96 }} type="button" onClick={download} style={buttonStyle(false)}>
+          Export backup (JSON)
+        </motion.button>
       </div>
-    </PageTransition>
+    </div>
   )
 }

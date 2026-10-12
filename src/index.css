@@ -49,6 +49,7 @@
   --glass-highlight: rgba(255, 255, 255, 0.85);
   --glass-shadow:    rgba(0, 0, 0, 0.1);
   --glass-thumb:     #FFFFFF;
+  --glass-bg-strong: rgba(255, 255, 255, 0.74);
   /* Extend nav height to cover the status bar in black-translucent PWA mode */
   --nav-height: calc(56px + env(safe-area-inset-top));
 }
@@ -79,6 +80,7 @@ html.dark {
   --glass-highlight:            rgba(255, 255, 255, 0.3);
   --glass-shadow:               rgba(0, 0, 0, 0.35);
   --glass-thumb:                rgba(255, 255, 255, 0.16);
+  --glass-bg-strong:            rgba(34, 34, 38, 0.72);
 }
 
 html.dark ::-webkit-scrollbar-thumb {
