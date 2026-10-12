@@ -45,24 +45,25 @@ const SPRING      = { type: 'spring', stiffness: 260, damping: 30 }
 // null until the first visit of a session, which pulls a record at random.
 let _carouselIndex = null
 
-// Slow spring for the "flipping through a crate" feel
-const FLIP = { type: 'spring', stiffness: 85, damping: 19 }
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 // One cover. Its transform is derived from the shared continuous position `pos`,
 // so it tracks the finger 1:1 while dragging and springs on release.
-function CarouselCard({ album, albumIdx, n, pos, cardSize, reflectionH, isCurrent }) {
+function CarouselCard({ album, albumIdx, n, pos, fan, reveal, cardSize, reflectionH, isCurrent }) {
   const flight  = useFlight()
   const d       = useTransform(pos, p => wrapDelta(albumIdx - p, n))
-  const x       = useTransform(d, v => clamp(v, -VISIBLE_R, VISIBLE_R) * cardSize * SPACING)
-  const scale   = useTransform(d, v => 1 - Math.min(Math.abs(v), VISIBLE_R) * SCALE_DRP)
-  const rotateY = useTransform(d, v => -clamp(v, -1, 1) * TILT_DEG)
+  // fan: 0 = every cover stacked behind the centre one, 1 = fully fanned out
+  const x       = useTransform([d, fan], ([v, f]) => clamp(v, -VISIBLE_R, VISIBLE_R) * cardSize * SPACING * f)
+  const scale   = useTransform([d, fan], ([v, f]) => 1 - Math.min(Math.abs(v), VISIBLE_R) * SCALE_DRP * f)
+  const rotateY = useTransform([d, fan], ([v, f]) => -clamp(v, -1, 1) * TILT_DEG * f)
   const zIndex  = useTransform(d, v => Math.round(10 - Math.abs(v) * 2))
-  const opacity = useTransform(d, v => {
+  // The centre cover fades in first (reveal); the others fade in as they slide out (fan)
+  const opacity = useTransform([d, fan, reveal], ([v, f, r]) => {
     const a = Math.abs(v)
-    return a <= VISIBLE_R
+    const base = a <= VISIBLE_R
       ? 1 - a * OPACITY_DRP
       : Math.max(0, (1 - VISIBLE_R * OPACITY_DRP) * (RENDER_R - a))
+    return base * (a < 0.5 ? r : f)
   })
 
   return (
@@ -144,7 +145,13 @@ export default function Wall() {
   const pos  = useMotionValue(_carouselIndex ?? 0)
   // dive: pinch-out zoom of the whole carousel (1 = rest)
   const dive = useMotionValue(1)
-  const labelOpacity = useTransform(dive, [1, 1.3], [1, 0])
+  // Landing intro: the centre record fades in, then the neighbours fan out from behind it.
+  // Skipped (already 1) when coming back from an album so the cover can fly home.
+  const { from } = useContext(NavTypeContext)
+  const settled = _carouselIndex !== null && Boolean(from?.startsWith('/album'))
+  const reveal = useMotionValue(settled ? 1 : 0)
+  const fan    = useMotionValue(settled ? 1 : 0)
+  const labelOpacity = useTransform([dive, reveal], ([dv, r]) => r * (1 - clamp((dv - 1) / 0.3, 0, 1)))
   const [index, setIndex] = useState(_carouselIndex ?? 0)
   const areaRef  = useRef(null)
   const anim     = useRef(null)
@@ -164,30 +171,32 @@ export default function Wall() {
     return pos.on('change', sync)
   }, [n, pos])
 
-  // Landing on the Collection (app launch, or arriving from another tab) reaches into the
-  // crate and flips to a random record. Coming back from an album keeps your place, so
-  // the cover can fly home.
-  const { from } = useContext(NavTypeContext)
+  // Landing on the Collection (app launch, or arriving from another tab) picks a random record
+  // and plays the intro. Coming back from an album keeps your place.
   const landed = useRef(false)
   useEffect(() => {
-    if (landed.current || loading || !authReady || n < 2) return // wait until the carousel is on screen
+    if (landed.current || loading || !authReady || n < 1) return // wait until the carousel is on screen
     landed.current = true
-    const cameFromAlbum = from?.startsWith('/album')
-    if (_carouselIndex !== null && cameFromAlbum) return
+    if (_carouselIndex !== null && from?.startsWith('/album')) return
 
-    const cur = Math.round(pos.get())
-    const curIdx = ((cur % n) + n) % n
-    const target = _carouselIndex === null
-      ? Math.floor(Math.random() * n)
-      : (curIdx + 1 + Math.floor(Math.random() * (n - 1))) % n // any record but the one already showing
-    _carouselIndex = target
+    if (n >= 2) {
+      const cur = Math.round(pos.get())
+      const curIdx = ((cur % n) + n) % n
+      const target = _carouselIndex === null
+        ? Math.floor(Math.random() * n)
+        : (curIdx + 1 + Math.floor(Math.random() * (n - 1))) % n // any record but the one already showing
+      _carouselIndex = target
+      pos.set(cur + wrapDelta(target - curIdx, n)) // jump straight there; the intro does the showing
+    } else {
+      _carouselIndex = 0
+    }
 
-    const dest = cur + wrapDelta(target - curIdx, n) // shortest way round the crate
-    if (prefersReducedMotion()) { pos.set(dest); return }
-    // Always show some travel: if the pick is close by, start a few records back
-    if (Math.abs(dest - cur) < 3) pos.set(dest - Math.min(7, n - 1))
-    anim.current = animate(pos, dest, FLIP)
-  }, [n, pos, loading, authReady, from])
+    if (prefersReducedMotion()) { reveal.set(1); fan.set(1); return }
+    dive.set(0.95)
+    animate(reveal, 1, { duration: 0.6, ease: [0.16, 1, 0.3, 1] })
+    animate(dive, 1, { type: 'spring', bounce: 0, duration: 0.8 })
+    animate(fan, 1, { type: 'spring', bounce: 0.1, duration: 1.0, delay: 0.45 })
+  }, [n, pos, loading, authReady, from, reveal, fan, dive])
 
   const goTo = (delta) => {
     anim.current?.stop()
@@ -338,6 +347,8 @@ export default function Wall() {
                 albumIdx={albumIdx}
                 n={n}
                 pos={pos}
+                fan={fan}
+                reveal={reveal}
                 cardSize={cardSize}
                 reflectionH={reflectionH}
                 isCurrent={albumIdx === index}
