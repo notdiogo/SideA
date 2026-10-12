@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 
@@ -52,7 +53,8 @@ export default function BarcodeScanner({ onDetect, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return (
+  // Portal to <body>: the page wrapper is transformed, which would trap a fixed overlay beneath the shell
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -61,7 +63,7 @@ export default function BarcodeScanner({ onDetect, onClose }) {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 100,
+        zIndex: 200,
         background: '#000',
         display: 'flex',
         alignItems: 'center',
@@ -72,6 +74,7 @@ export default function BarcodeScanner({ onDetect, onClose }) {
         ref={videoRef}
         playsInline
         muted
+        autoPlay
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
       />
 
@@ -123,6 +126,7 @@ export default function BarcodeScanner({ onDetect, onClose }) {
       >
         <X size={20} strokeWidth={1.5} />
       </motion.button>
-    </motion.div>
+    </motion.div>,
+    document.body,
   )
 }

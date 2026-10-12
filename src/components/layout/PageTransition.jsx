@@ -6,14 +6,25 @@ import { startFlight, coverEl, rectOf } from '../../lib/coverFlight'
 // it renders, so App reads the real navigation type and passes it down here.
 export const NavTypeContext = createContext({ type: 'PUSH', dir: 0, from: null })
 
-// Direction (custom) comes from App: +1 pushes in from the right, -1 pops in from the
-// left, 0 is a plain fade (used when a cover flies between the screens, so the
-// destination cover isn't displaced while it is measured). Exits are shorter and
-// smaller than enters, and travel only a short, layered distance.
+// AnimatePresence `custom` (from App): { dir, scroll, instant }
+//  dir     +1 pushes in from the right, -1 pops in from the left, 0 is a plain fade (a cover is
+//          flying between the screens, so the destination cover isn't displaced while measured)
+//  scroll  window scroll at the moment of navigation. The page scrolls the document, which is
+//          reset to the top for the new screen, so the leaving screen is shifted up by the same
+//          amount to stay exactly where the user last saw it (no jump).
+//  instant browser edge-swipe back: the OS already animated it, so the leaving screen just goes
+// Exits are shorter and smaller than enters.
 const SLIDE = 28
 const variants = {
   animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
-  exit:    (d = 0) => ({ opacity: 0, x: d * -SLIDE * 0.5, transition: { duration: 0.2, ease: [0.4, 0, 1, 1] } }),
+  exit: ({ dir = 0, scroll = 0, instant = false } = {}) => ({
+    opacity: 0,
+    x: instant ? 0 : dir * -SLIDE * 0.5,
+    y: -scroll,
+    transition: instant
+      ? { duration: 0 }
+      : { duration: 0.2, ease: [0.4, 0, 1, 1], y: { duration: 0 } },
+  }),
 }
 
 // Set by the in-app back control / pinch-out so a POP navigation still animates
@@ -30,32 +41,24 @@ export function goBack(navigate, { velocityY = 0 } = {}) {
   else navigate('/')
 }
 
-export default function PageTransition({ children, className = '' }) {
-  const { type: navType, dir } = useContext(NavTypeContext)
+// True when this screen was reached by the browser's own back/forward (edge swipe). The OS has
+// already animated it, so entrance animations on the page and its content should not replay.
+export function useSkipIntro() {
+  const { type } = useContext(NavTypeContext)
+  return type === 'POP' && !backNav.current
+}
 
-  // For browser edge-swipe back, skip the enter/exit animation entirely — the
-  // browser's own gesture handles the visual feedback, and mixing both causes
-  // a double-flash.
-  if (navType === 'POP' && !backNav.current) {
-    return (
-      <motion.div
-        className={className}
-        initial={false}
-        exit={{ opacity: 0, transition: { duration: 0.2 } }}
-        style={{ flex: 1, minWidth: 0 }}
-      >
-        {children}
-      </motion.div>
-    )
-  }
+export default function PageTransition({ children, className = '' }) {
+  const { dir } = useContext(NavTypeContext)
+  const skipIntro = useSkipIntro()
 
   return (
     <motion.div
       className={className}
       variants={variants}
-      // Entering page: direction is known from context at mount. (Exit reads the live
-      // direction from AnimatePresence's custom prop, which is what an exit needs.)
-      initial={{ opacity: 0, x: dir * SLIDE }}
+      // Entering page: direction is known from context at mount. (Exit reads the live custom
+      // prop from AnimatePresence, which is what an exit needs.)
+      initial={skipIntro ? false : { opacity: 0, x: dir * SLIDE }}
       animate="animate"
       exit="exit"
       style={{ flex: 1, minWidth: 0 }}

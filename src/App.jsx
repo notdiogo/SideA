@@ -1,11 +1,11 @@
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom'
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useLayoutEffect } from 'react'
 import { useCollection } from './hooks/useCollection'
 import AppShell from './components/layout/AppShell'
 import CoverFlight from './components/layout/CoverFlight'
 import AmbientField from './components/layout/AmbientField'
-import { NavTypeContext } from './components/layout/PageTransition'
+import { NavTypeContext, backNav } from './components/layout/PageTransition'
 import { getFlight } from './lib/coverFlight'
 import Wall from './pages/Wall'
 import AddRecord from './pages/AddRecord'
@@ -35,10 +35,22 @@ export default function App() {
   const navType = useNavigationType()
 
   // Derive the transition direction while rendering, so entering and exiting pages agree
-  const [nav, setNav] = useState({ path: location.pathname, dir: 0, from: null })
+  const [nav, setNav] = useState({ path: location.pathname, dir: 0, from: null, scroll: 0, instant: false })
   if (nav.path !== location.pathname) {
-    setNav({ path: location.pathname, dir: directionFor(nav.path, location.pathname), from: nav.path })
+    setNav({
+      path: location.pathname,
+      dir: directionFor(nav.path, location.pathname),
+      from: nav.path,
+      scroll: window.scrollY, // lets the leaving screen hold its place when the document scroll resets
+      instant: navType === 'POP' && !backNav.current, // browser edge-swipe: the OS already animated it
+    })
   }
+  // Each screen starts at the top. (Browser back/forward restores its own scroll, so leave that.)
+  useLayoutEffect(() => {
+    if (nav.instant) return
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [nav.path, nav.instant])
+
   // Track-to-track swipes stay on one page; only the album/track group remounts
   const pageKey = location.pathname.replace(/\/track\/[^/]+$/, '/track')
 
@@ -67,7 +79,7 @@ export default function App() {
       <MotionConfig reducedMotion="user">
       <AmbientField />
       <AppShell>
-        <AnimatePresence mode="popLayout" initial={false} custom={nav.dir}>
+        <AnimatePresence mode="popLayout" initial={false} custom={nav}>
           <motion.div
             key={pageKey}
             style={{ flex: 1, display: 'flex', flexDirection: 'column' }}

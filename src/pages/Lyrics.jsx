@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import { useSwipe } from '../hooks/useSwipe'
 import { useViewport } from '../hooks/useViewport'
-import PageTransition from '../components/layout/PageTransition'
+import PageTransition, { useSkipIntro } from '../components/layout/PageTransition'
 import { fetchLyrics } from '../lib/lyrics'
 import { sampleColor, setAmbient } from '../lib/ambient'
 
@@ -26,6 +26,7 @@ export default function Lyrics() {
   const scrollTimer = useRef(null)
   const lastScrollY = useRef(0)
   const { isLandscape, isTablet } = useViewport()
+  const skipIntro = useSkipIntro() // browser edge-swipe back: don't replay the entrance
 
   const album = albums.find(a => a.id === albumId)
 
@@ -236,7 +237,7 @@ export default function Lyrics() {
               key={currentTrackId}
               custom={direction}
               variants={lyricsVariants}
-              initial="initial"
+              initial={skipIntro ? false : "initial"}
               animate="animate"
               exit="exit"
               style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '32px 40px' }}
@@ -270,7 +271,7 @@ export default function Lyrics() {
             key={currentTrackId}
             custom={direction}
             variants={lyricsVariants}
-            initial="initial"
+            initial={skipIntro ? false : "initial"}
             animate="animate"
             exit="exit"
             style={{
