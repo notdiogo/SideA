@@ -2,7 +2,7 @@ import { Disc3 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
-export default function EmptyState() {
+export default function EmptyState({ signedOut = false }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -46,6 +46,15 @@ export default function EmptyState() {
       >
         Add your first record
       </Link>
+      {signedOut && (
+        <Link
+          to="/sync"
+          className="text-sm transition-opacity hover:opacity-80"
+          style={{ color: 'var(--color-muted-foreground)' }}
+        >
+          Already have a collection? Sign in to sync
+        </Link>
+      )}
     </motion.div>
   )
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Reorder, motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { GripVertical, Trash2, ChevronDown, ChevronUp, Plus } from 'lucide-react'
-import { generateId } from '@/store/collection'
+import { generateId } from '@/store/localDb'
 
 function TrackRow({ track, index, onChange, onDelete }) {
   const [expanded, setExpanded] = useState(false)

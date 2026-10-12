@@ -41,7 +41,7 @@ const VISIBLE_R = 2
 let _carouselIndex = 0
 
 export default function Wall() {
-  const { albums, loading, viewMode } = useCollectionContext()
+  const { albums, loading, viewMode, session, authReady } = useCollectionContext()
   const navigate = useNavigate()
   const cardSize = useCardSize()
   const [index, setIndex] = useState(_carouselIndex)
@@ -76,7 +76,7 @@ export default function Wall() {
     setIndex(i => ((i + delta) % n + n) % n)
   }
 
-  if (loading) {
+  if (loading || !authReady) {
     return (
       <PageTransition>
         <div style={{ height: 'calc(100dvh - var(--nav-height))' }} />
@@ -87,7 +87,7 @@ export default function Wall() {
   if (!sorted.length) {
     return (
       <PageTransition>
-        <EmptyState />
+        <EmptyState signedOut={!session} />
       </PageTransition>
     )
   }

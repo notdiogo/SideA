@@ -109,17 +109,10 @@ Auth is handled before routing — if the user is not authenticated, only `Auth.
 ### State Management
 - Global state lives in `CollectionContext` (defined in `App.jsx`)
 - Consumed via the `useCollection` hook (`src/hooks/useCollection.js`)
-- Context provides: `{ albums, loading, addAlbum, updateAlbum, removeAlbum }`
+- Context provides: `{ albums, loading, addAlbum, updateAlbum, removeAlbum, session, status, sync, exportJson }`
 
 ### Storage
-Two implementations with identical interfaces (`getAll`, `getById`, `save`, `remove`):
-
-| Module | Backend | Status |
-|--------|---------|--------|
-| `src/store/collection.js` | `localStorage` | Legacy/backup |
-| `src/store/supabaseCollection.js` | Supabase (Postgres) | **Primary** |
-
-The app uses the Supabase implementation. Albums are scoped to the authenticated user via `user_id`.
+Local-first. `src/store/localDb.js` (IndexedDB) is the on-device source of truth; the app renders from it and works offline. `src/store/sync.js` pushes dirty records to Supabase, then pulls rows with `updated_at` after a stored cursor. Rules: dirty local records win; `updated_at` is set by a DB trigger; deletes are soft (`deleted_at` tombstones). Sync only runs when signed in. Supabase is the sync/backup copy, not a hard dependency.
 
 ### Data Models
 
@@ -210,11 +203,9 @@ Do not increase these limits without considering Supabase storage capacity and l
 
 ## Authentication
 
-- Provider: Supabase Auth with **OTP (magic link) email**
-- No password UI — user enters email, receives a one-time code
-- Session managed by Supabase SDK via `onAuthStateChange`
-- All album operations require an authenticated session
-- Supabase row-level security (RLS) is expected to enforce user data isolation server-side
+- Optional: the app works signed-out (local only). `/sync` page signs in via Supabase email OTP **6-digit code** (not a magic link — iOS home-screen PWAs have separate storage from Safari). Sign-ups are disabled (`shouldCreateUser: false`).
+- RLS on `albums`: owner-only (`user_id = auth.uid()`); `user_id` defaults to `auth.uid()`.
+- Never commit collection data (`backups/` is gitignored; the site and repo are public).
 
 ---
 

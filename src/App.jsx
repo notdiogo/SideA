@@ -7,6 +7,7 @@ import Wall from './pages/Wall'
 import AddRecord from './pages/AddRecord'
 import AlbumDetail from './pages/AlbumDetail'
 import Lyrics from './pages/Lyrics'
+import Sync from './pages/Sync'
 
 export const CollectionContext = createContext(null)
 export const useCollectionContext = () => useContext(CollectionContext)
@@ -41,6 +42,7 @@ export default function App() {
         <AnimatePresence mode="wait" initial={false}>
           <Routes location={location} key={location.pathname}>
             <Route path="/"                                element={<Wall />} />
+            <Route path="/sync"                            element={<Sync />} />
             <Route path="/add"                             element={<AddRecord />} />
             <Route path="/album/:albumId"                  element={<AlbumDetail />} />
             <Route path="/album/:albumId/edit"             element={<AddRecord />} />
