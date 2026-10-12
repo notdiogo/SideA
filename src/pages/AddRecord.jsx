@@ -7,7 +7,7 @@ import ImageUpload from '../components/forms/ImageUpload'
 import TrackListEditor from '../components/forms/TrackListEditor'
 import BarcodeScanner from '../components/forms/BarcodeScanner'
 import PageTransition from '../components/layout/PageTransition'
-import { searchRelease, searchReleaseByBarcode, fetchCoverAsBase64 } from '../lib/musicbrainz'
+import { searchAlbums, loadAlbum, searchReleaseByBarcode, fetchCoverAsBase64, groupThumbUrl } from '../lib/musicbrainz'
 import { prefetchAlbumLyrics } from '../lib/lyrics'
 
 const inputStyle = {
@@ -45,42 +45,134 @@ function Field({ label, error, children }) {
 
 // ── Auto-fill panel ──────────────────────────────────────────────────────────
 
+function ResultRow({ group, loading, disabled, onPick }) {
+  const [noCover, setNoCover] = useState(false)
+  const meta = [group.artist, group.year, group.type && group.type !== 'Album' ? group.type : ''].filter(Boolean).join(' · ')
+  return (
+    <motion.button
+      type="button"
+      whileTap={disabled ? undefined : { scale: 0.98 }}
+      onClick={() => onPick(group)}
+      disabled={disabled}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '8px',
+        borderRadius: '14px',
+        textAlign: 'left',
+        width: '100%',
+        opacity: disabled && !loading ? 0.5 : 1,
+        transition: 'opacity 0.2s',
+      }}
+    >
+      <div
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: '8px',
+          overflow: 'hidden',
+          flexShrink: 0,
+          background: 'var(--color-secondary)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {noCover ? (
+          <Music size={18} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
+        ) : (
+          <img
+            src={groupThumbUrl(group.groupId)}
+            alt=""
+            loading="lazy"
+            onError={() => setNoCover(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        )}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-foreground)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {group.title}
+        </p>
+        <p style={{ fontSize: '13px', fontWeight: 300, color: 'var(--color-muted-foreground)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {meta}
+        </p>
+      </div>
+      {loading && (
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          style={{ color: 'var(--color-muted-foreground)', flexShrink: 0 }}
+        >
+          <Loader2 size={16} strokeWidth={1.5} />
+        </motion.div>
+      )}
+    </motion.button>
+  )
+}
+
 function AutoFillPanel({ onConfirm }) {
-  const [artist, setArtist] = useState('')
-  const [album, setAlbum] = useState('')
-  const [state, setState] = useState('idle') // idle | loading | preview | error
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [state, setState] = useState('idle') // idle | searching | loading | preview | error
   const [preview, setPreview] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [scanning, setScanning] = useState(false)
+  const [pickingId, setPickingId] = useState(null)
 
-  const handleSearch = async () => {
-    if (!artist.trim() || !album.trim()) return
-    await runLookup(() => searchRelease(artist.trim(), album.trim()), 'No album found. Try adjusting the artist or title.')
-  }
+  // Debounced as-you-type search; stale requests are aborted
+  useEffect(() => {
+    const term = query.trim()
+    if (term.length < 3) {
+      setResults([])
+      setState(s => (s === 'searching' || s === 'error' ? 'idle' : s))
+      return
+    }
+    const controller = new AbortController()
+    const timer = setTimeout(async () => {
+      setState('searching')
+      setErrorMsg('')
+      try {
+        const found = await searchAlbums(term, controller.signal)
+        setResults(found)
+        setState(found.length ? 'idle' : 'error')
+        if (!found.length) setErrorMsg('No albums found. Try fewer or different words.')
+      } catch (err) {
+        if (err.name === 'AbortError') return
+        setErrorMsg('Search failed. Check your connection and try again.')
+        setState('error')
+      }
+    }, 400)
+    return () => { clearTimeout(timer); controller.abort() }
+  }, [query])
 
-  const handleBarcode = (code) => {
-    setScanning(false)
-    runLookup(() => searchReleaseByBarcode(code), `No album found for barcode ${code}. Try searching by name.`)
-  }
-
-  const runLookup = async (lookup, notFoundMsg) => {
+  const showPreview = async (load, notFoundMsg) => {
     setState('loading')
     setErrorMsg('')
     try {
-      const result = await lookup()
-      const cover = await fetchCoverAsBase64(result.mbid)
+      const result = await load()
+      const cover = await fetchCoverAsBase64(result.mbid, result.groupId)
       setPreview({ ...result, coverImage: cover })
       setState('preview')
     } catch (err) {
       setErrorMsg(err.message === 'No album found'
         ? notFoundMsg
-        : 'Search failed. Check your connection and try again.')
+        : 'Lookup failed. Check your connection and try again.')
       setState('error')
+    } finally {
+      setPickingId(null)
     }
   }
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleSearch()
+  const handlePick = (group) => {
+    setPickingId(group.groupId)
+    showPreview(() => loadAlbum(group), 'No tracklist found for that album.')
+  }
+
+  const handleBarcode = (code) => {
+    setScanning(false)
+    showPreview(() => searchReleaseByBarcode(code), `No album found for barcode ${code}. Try searching by name.`)
   }
 
   const handleReset = () => {
@@ -89,6 +181,8 @@ function AutoFillPanel({ onConfirm }) {
     setErrorMsg('')
   }
 
+  const busy = state === 'loading'
+
   return (
     <div>
       <AnimatePresence>
@@ -96,95 +190,72 @@ function AutoFillPanel({ onConfirm }) {
       </AnimatePresence>
 
       {state !== 'preview' && (
-        <motion.button
-          whileTap={state === 'loading' ? undefined : { scale: 0.96 }}
-          onClick={() => setScanning(true)}
-          disabled={state === 'loading'}
-          style={{
-            width: '100%',
-            padding: '15px',
-            borderRadius: '999px',
-            background: 'var(--color-primary)',
-            color: 'var(--color-primary-foreground)',
-            fontSize: '15px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            marginBottom: '18px',
-            opacity: state === 'loading' ? 0.5 : 1,
-          }}
-        >
-          <ScanBarcode size={16} strokeWidth={1.5} />
-          Scan barcode
-        </motion.button>
-      )}
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
-        <input
-          className="field"
-          style={inputStyle}
-          value={artist}
-          onChange={e => setArtist(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Artist name"
-          disabled={state === 'loading'}
-        />
-        <input
-          className="field"
-          style={inputStyle}
-          value={album}
-          onChange={e => setAlbum(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Album title"
-          disabled={state === 'loading'}
-        />
-      </div>
-
-      {state !== 'preview' && (
-        <motion.button
-          whileTap={state === 'loading' || !artist.trim() || !album.trim() ? undefined : { scale: 0.96 }}
-          onClick={handleSearch}
-          disabled={state === 'loading' || !artist.trim() || !album.trim()}
-          style={{
-            width: '100%',
-            padding: '15px',
-            borderRadius: '999px',
-            background: (state === 'loading' || !artist.trim() || !album.trim()) ? 'var(--color-secondary)' : 'var(--color-primary)',
-            color: (state === 'loading' || !artist.trim() || !album.trim()) ? 'var(--color-muted-foreground)' : 'var(--color-primary-foreground)',
-            fontSize: '15px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            transition: 'background 0.2s, color 0.2s',
-          }}
-        >
-          {state === 'loading' ? (
-            <>
+        <>
+          <div style={{ position: 'relative', marginBottom: '10px' }}>
+            <Search
+              size={16}
+              strokeWidth={1.5}
+              style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-muted-foreground)', pointerEvents: 'none' }}
+            />
+            <input
+              className="field"
+              style={{ ...inputStyle, paddingLeft: '40px', paddingRight: '40px' }}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search artist or album"
+              enterKeyHint="search"
+              autoCapitalize="off"
+              autoCorrect="off"
+              disabled={busy}
+            />
+            {state === 'searching' && (
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                style={{ position: 'absolute', right: 14, top: '50%', marginTop: -8, color: 'var(--color-muted-foreground)' }}
               >
                 <Loader2 size={16} strokeWidth={1.5} />
               </motion.div>
-              Looking up album…
-            </>
-          ) : (
-            <>
-              <Search size={16} strokeWidth={1.5} />
-              Search
-            </>
-          )}
-        </motion.button>
-      )}
+            )}
+          </div>
 
-      {state === 'error' && (
-        <p style={{ marginTop: '10px', fontSize: '13px', color: 'oklch(55% 0.18 25)', textAlign: 'center' }}>
-          {errorMsg}
-        </p>
+          <motion.button
+            whileTap={busy ? undefined : { scale: 0.96 }}
+            onClick={() => setScanning(true)}
+            disabled={busy}
+            style={{
+              width: '100%',
+              padding: '15px',
+              borderRadius: '999px',
+              background: 'var(--color-secondary)',
+              color: 'var(--color-foreground)',
+              fontSize: '15px',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: busy ? 0.5 : 1,
+            }}
+          >
+            <ScanBarcode size={16} strokeWidth={1.5} />
+            Scan barcode
+          </motion.button>
+
+          {state === 'error' && (
+            <p style={{ marginTop: '14px', fontSize: '13px', color: 'oklch(55% 0.18 25)', textAlign: 'center' }}>
+              {errorMsg}
+            </p>
+          )}
+
+          {results.length > 0 && (
+            <div style={{ marginTop: '18px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {results.map(g => (
+                <ResultRow key={g.groupId} group={g} loading={pickingId === g.groupId} disabled={busy} onPick={handlePick} />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <AnimatePresence>

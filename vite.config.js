@@ -9,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   base: '/SideA/',
+  server: { port: Number(process.env.PORT) || 5173 },
   plugins: [
     tailwindcss(),
     react(),
