@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, animate, useMotionValue } from 'framer-motion'
+import { useGesture } from '@use-gesture/react'
 import { MoreHorizontal, Edit3, Trash2, Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import { useViewport } from '../hooks/useViewport'
-import PageTransition from '../components/layout/PageTransition'
+import PageTransition, { goBack } from '../components/layout/PageTransition'
+import { useFlight } from '../lib/coverFlight'
 
 const trackVariants = {
   initial: { opacity: 0 },
@@ -39,6 +41,21 @@ export default function AlbumDetail() {
   const { isLandscape, isTablet } = useViewport()
 
   const album = albums.find(a => a.id === albumId)
+  const flight = useFlight()
+  const coverHidden = flight?.id === albumId && flight.dir === 'in'
+
+  // Pinch in to zoom back out to the carousel
+  const pinchScale = useMotionValue(1)
+  const bindPinch = useGesture(
+    {
+      onPinch: ({ offset: [sc] }) => pinchScale.set(Math.min(1.04, Math.max(0.8, sc))),
+      onPinchEnd: () => {
+        if (pinchScale.get() < 0.9) goBack(navigate)
+        else animate(pinchScale, 1, { type: 'spring', stiffness: 300, damping: 30 })
+      },
+    },
+    { pinch: { from: () => [1, 0], scaleBounds: { min: 0.8, max: 1.04 }, rubberband: true }, eventOptions: { passive: false } }
+  )
 
   useEffect(() => {
     if (!album) navigate('/', { replace: true })
@@ -197,6 +214,7 @@ export default function AlbumDetail() {
       </div>
 
       <PageTransition>
+        <motion.div {...bindPinch()} style={{ scale: pinchScale, flex: 1, touchAction: 'pan-y', transformOrigin: '50% 30%' }}>
         {isTabletLandscape ? (
           /* ── Landscape: two-column ── */
           <div
@@ -222,15 +240,17 @@ export default function AlbumDetail() {
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {/* Vinyl disc behind the art */}
                 <div style={{ position: 'absolute', right: -28, top: 130, transform: 'translateY(-50%)', zIndex: 0 }}>
-                  <VinylDisc size={220} />
+                  <motion.div initial={{ x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
+                    <VinylDisc size={220} />
+                  </motion.div>
                 </div>
 
                 {/* Album art */}
-                <motion.div
-                  initial={{ scale: 0.92, opacity: 0 }}
-                  animate={{ scale: 1,    opacity: 1 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                <div
+                  data-cover-slot={albumId}
+                  data-cover-page="detail"
                   style={{
+                    opacity:      coverHidden ? 0 : 1,
                     position:     'relative',
                     zIndex:        1,
                     width:         260,
@@ -241,7 +261,7 @@ export default function AlbumDetail() {
                   }}
                 >
                   {artContent}
-                </motion.div>
+                </div>
 
                 {/* Floor reflection */}
                 {album.coverImage && (
@@ -320,15 +340,17 @@ export default function AlbumDetail() {
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {/* Vinyl disc behind the art */}
                 <div style={{ position: 'absolute', right: -28, top: 110, transform: 'translateY(-50%)', zIndex: 0 }}>
-                  <VinylDisc size={200} />
+                  <motion.div initial={{ x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
+                    <VinylDisc size={200} />
+                  </motion.div>
                 </div>
 
                 {/* Album art */}
-                <motion.div
-                  initial={{ scale: 0.92, opacity: 0 }}
-                  animate={{ scale: 1,    opacity: 1 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                <div
+                  data-cover-slot={albumId}
+                  data-cover-page="detail"
                   style={{
+                    opacity:      coverHidden ? 0 : 1,
                     position:     'relative',
                     zIndex:        1,
                     width:         220,
@@ -339,7 +361,7 @@ export default function AlbumDetail() {
                   }}
                 >
                   {artContent}
-                </motion.div>
+                </div>
 
                 {/* Floor reflection */}
                 {album.coverImage && (
@@ -485,6 +507,7 @@ export default function AlbumDetail() {
             </motion.div>
           )}
         </AnimatePresence>
+        </motion.div>
       </PageTransition>
     </>
   )

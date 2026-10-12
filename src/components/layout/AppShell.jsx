@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, MoreHorizontal, Plus, List, LayoutGrid, Moon, Sun, RefreshCw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCollectionContext } from '../../App'
+import { goBack } from './PageTransition'
 
 const menuItemStyle = {
   display:    'flex',
@@ -76,7 +77,7 @@ export default function AppShell({ children }) {
           {!isHome && (
             <motion.button
               whileTap={{ scale: 0.96 }}
-              onClick={() => navigate(-1)}
+              onClick={() => goBack(navigate)}
               style={{
                 display:        'flex',
                 alignItems:     'center',
@@ -207,6 +208,7 @@ export default function AppShell({ children }) {
       <main
         style={{
           paddingTop:     'var(--nav-height)',
+          position:       'relative',
           flex:            1,
           display:        'flex',
           flexDirection:  'column',

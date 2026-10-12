@@ -1,8 +1,9 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { AnimatePresence, MotionConfig } from 'framer-motion'
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useCollection } from './hooks/useCollection'
 import AppShell from './components/layout/AppShell'
+import CoverFlight from './components/layout/CoverFlight'
 import Wall from './pages/Wall'
 import AddRecord from './pages/AddRecord'
 import AlbumDetail from './pages/AlbumDetail'
@@ -40,17 +41,23 @@ export default function App() {
     <CollectionContext.Provider value={{ ...collection, viewMode, setViewMode, theme, setTheme }}>
       <MotionConfig reducedMotion="user">
       <AppShell>
-        <AnimatePresence mode="wait" initial={false}>
-          <Routes location={location} key={location.pathname}>
-            <Route path="/"                                element={<Wall />} />
-            <Route path="/sync"                            element={<Sync />} />
-            <Route path="/add"                             element={<AddRecord />} />
-            <Route path="/album/:albumId"                  element={<AlbumDetail />} />
-            <Route path="/album/:albumId/edit"             element={<AddRecord />} />
-            <Route path="/album/:albumId/track/:trackId"   element={<Lyrics />} />
-          </Routes>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.div
+            key={location.pathname}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+          >
+            <Routes location={location}>
+              <Route path="/"                                element={<Wall />} />
+              <Route path="/sync"                            element={<Sync />} />
+              <Route path="/add"                             element={<AddRecord />} />
+              <Route path="/album/:albumId"                  element={<AlbumDetail />} />
+              <Route path="/album/:albumId/edit"             element={<AddRecord />} />
+              <Route path="/album/:albumId/track/:trackId"   element={<Lyrics />} />
+            </Routes>
+          </motion.div>
         </AnimatePresence>
       </AppShell>
+      <CoverFlight />
       </MotionConfig>
     </CollectionContext.Provider>
   )
