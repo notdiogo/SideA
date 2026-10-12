@@ -1,23 +1,29 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, animate, useMotionValue } from 'framer-motion'
+import { useGesture } from '@use-gesture/react'
 import { MoreHorizontal, Edit3, Trash2, Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import { useViewport } from '../hooks/useViewport'
-import PageTransition from '../components/layout/PageTransition'
+import PageTransition, { goBack } from '../components/layout/PageTransition'
+import { useFlight } from '../lib/coverFlight'
+import { sampleColor, setAmbient } from '../lib/ambient'
 
+// Entrance choreography after the cover lands: cover (0–.55s) → vinyl (.3) → metadata (.25) → tracks (.35+)
 const trackVariants = {
-  initial: { opacity: 0 },
+  initial: { opacity: 0, y: 8 },
   animate: (i) => ({
     opacity: 1,
-    transition: { delay: i * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] },
+    y: 0,
+    transition: { delay: 0.3 + Math.min(i, 10) * 0.035, duration: 0.4, ease: [0.16, 1, 0.3, 1] },
   }),
 }
 
 function VinylDisc({ size = 180 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 180 180" fill="none" aria-hidden="true">
-      <circle cx="90" cy="90" r="89" fill="#1C1C1E" />
+      <circle cx="90" cy="90" r="89" fill="#1C1C1E" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
       <circle cx="90" cy="90" r="75" stroke="#2C2C2E" strokeWidth="1" />
       <circle cx="90" cy="90" r="62" stroke="#2C2C2E" strokeWidth="1" />
       <circle cx="90" cy="90" r="50" stroke="#2C2C2E" strokeWidth="1" />
@@ -32,17 +38,40 @@ function VinylDisc({ size = 180 }) {
 export default function AlbumDetail() {
   const { albumId } = useParams()
   const navigate = useNavigate()
-  const { albums, removeAlbum } = useCollectionContext()
+  const { albums, loading, removeAlbum } = useCollectionContext()
   const [showOptions, setShowOptions] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const optionsRef = useRef(null)
   const { isLandscape, isTablet } = useViewport()
 
   const album = albums.find(a => a.id === albumId)
+  const flight = useFlight()
+  const coverHidden = flight?.id === albumId && flight.dir === 'in'
 
   useEffect(() => {
-    if (!album) navigate('/', { replace: true })
-  }, [album, navigate])
+    if (!album?.coverImage) return
+    let live = true
+    sampleColor(album.coverImage).then(rgb => { if (live) setAmbient(rgb) }).catch(() => {})
+    return () => { live = false }
+  }, [album?.coverImage])
+
+  // Pinch in to zoom back out to the carousel
+  const pinchScale = useMotionValue(1)
+  const bindPinch = useGesture(
+    {
+      onPinch: ({ offset: [sc] }) => pinchScale.set(Math.min(1.04, Math.max(0.8, sc))),
+      onPinchEnd: () => {
+        if (pinchScale.get() < 0.9) goBack(navigate)
+        else animate(pinchScale, 1, { type: 'spring', stiffness: 300, damping: 30 })
+      },
+    },
+    { pinch: { from: () => [1, 0], scaleBounds: { min: 0.8, max: 1.04 }, rubberband: true }, eventOptions: { passive: false } }
+  )
+
+  useEffect(() => {
+    // Wait for the local DB to load before treating a missing album as deleted
+    if (!album && !loading) navigate('/', { replace: true })
+  }, [album, loading, navigate])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -88,40 +117,45 @@ export default function AlbumDetail() {
       whileTap={{ backgroundColor: 'var(--color-secondary)' }}
       onClick={() => navigate(`/album/${albumId}/track/${track.id}`)}
       style={{
-        display:      'flex',
-        alignItems:   'center',
-        gap:           16,
-        width:        '100%',
-        padding:      '14px 24px',
-        background:   'transparent',
-        borderBottom: '1px solid var(--color-border)',
-        borderTop:     i === 0 ? '1px solid var(--color-border)' : 'none',
-        textAlign:    'left',
-        cursor:       'pointer',
-        transition:   'background 0.15s',
+        display:    'block',
+        width:      '100%',
+        padding:    '0 24px',
+        background: 'transparent',
+        textAlign:  'left',
+        cursor:     'pointer',
       }}
     >
-      <span style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300, width: '24px', flexShrink: 0, textAlign: 'center' }}>
-        {i + 1}
-      </span>
-      <span style={{ fontSize: '15px', fontWeight: 400, color: 'var(--color-foreground)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {track.title || 'Untitled'}
-      </span>
-      <span style={{ color: 'var(--color-muted-foreground)', fontSize: '18px' }}>›</span>
+      <div
+        style={{
+          display:      'flex',
+          alignItems:   'baseline',
+          gap:           18,
+          padding:      '17px 0',
+          borderBottom: '1px solid var(--color-border)',
+        }}
+      >
+        <span style={{ fontSize: '12px', letterSpacing: '0.06em', fontVariantNumeric: 'tabular-nums', color: 'var(--color-muted-foreground)', fontWeight: 400, width: '20px', flexShrink: 0 }}>
+          {String(i + 1).padStart(2, '0')}
+        </span>
+        <span style={{ fontSize: '15px', fontWeight: 400, letterSpacing: '-0.01em', color: 'var(--color-foreground)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {track.title || 'Untitled'}
+        </span>
+      </div>
     </motion.button>
   ))
 
   return (
     <>
-      {/* ── Options button — outside PageTransition so position:fixed isn't
-           broken by the parent transform animation ── */}
+      {/* ── Options button — portalled so it stays above the header fade ── */}
+      {createPortal(
       <div
         ref={optionsRef}
         style={{ position: 'fixed', top: 10, right: 16, zIndex: 35 }}
       >
         <motion.button
           type="button"
-          whileTap={{ scale: 0.92 }}
+          className="glass"
+          whileTap={{ scale: 0.96 }}
           onClick={() => setShowOptions(v => !v)}
           style={{
             display:        'flex',
@@ -130,7 +164,6 @@ export default function AlbumDetail() {
             width:           36,
             height:          36,
             borderRadius:   '999px',
-            background:     'var(--color-secondary)',
             color:          'var(--color-foreground)',
           }}
         >
@@ -140,6 +173,7 @@ export default function AlbumDetail() {
         <AnimatePresence>
           {showOptions && (
             <motion.div
+              className="glass"
               initial={{ opacity: 0, scale: 0.93, y: -4 }}
               animate={{ opacity: 1, scale: 1,    y: 0  }}
               exit={{    opacity: 0, scale: 0.93, y: -4 }}
@@ -148,9 +182,7 @@ export default function AlbumDetail() {
                 position:        'absolute',
                 top:             'calc(100% + 6px)',
                 right:            0,
-                background:      'var(--color-card)',
                 borderRadius:     14,
-                boxShadow:       '0 4px 24px rgba(0,0,0,0.14)',
                 overflow:        'hidden',
                 minWidth:         140,
                 transformOrigin: 'top right',
@@ -194,13 +226,17 @@ export default function AlbumDetail() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </div>,
+        document.body
+      )}
 
       <PageTransition>
+        <motion.div {...bindPinch()} style={{ scale: pinchScale, flex: 1, minWidth: 0, width: '100%', touchAction: 'pan-y', transformOrigin: '50% 30%' }}>
         {isTabletLandscape ? (
           /* ── Landscape: two-column ── */
           <div
             style={{
+              width:       '100%',
               maxWidth:    1100,
               margin:      '0 auto',
               display:     'flex',
@@ -222,26 +258,28 @@ export default function AlbumDetail() {
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {/* Vinyl disc behind the art */}
                 <div style={{ position: 'absolute', right: -28, top: 130, transform: 'translateY(-50%)', zIndex: 0 }}>
-                  <VinylDisc size={220} />
+                  <motion.div initial={{ x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
+                    <VinylDisc size={220} />
+                  </motion.div>
                 </div>
 
                 {/* Album art */}
-                <motion.div
-                  initial={{ scale: 0.92, opacity: 0 }}
-                  animate={{ scale: 1,    opacity: 1 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                <div
+                  data-cover-slot={albumId}
+                  data-cover-page="detail"
                   style={{
+                    opacity:      coverHidden ? 0 : 1,
                     position:     'relative',
                     zIndex:        1,
                     width:         260,
                     height:        260,
                     borderRadius: '8px',
                     overflow:     'hidden',
-                    boxShadow:    '0 8px 32px rgba(0,0,0,0.12)',
+                    boxShadow:    '0 12px 36px rgba(0,0,0,0.14)',
                   }}
                 >
                   {artContent}
-                </motion.div>
+                </div>
 
                 {/* Floor reflection */}
                 {album.coverImage && (
@@ -271,19 +309,19 @@ export default function AlbumDetail() {
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: 0.25, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 style={{ paddingBottom: 28 }}
               >
                 {album.artist && (
-                  <p style={{ fontSize: '13px', fontWeight: 300, color: 'var(--color-muted-foreground)', marginBottom: '6px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '12px' }}>
                     {album.artist}
                   </p>
                 )}
-                <h1 style={{ fontSize: '28px', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-foreground)', lineHeight: 1.15 }}>
+                <h1 style={{ fontSize: '34px', fontWeight: 500, letterSpacing: '-0.035em', color: 'var(--color-foreground)', lineHeight: 1.1, textWrap: 'balance' }}>
                   {album.title}
                 </h1>
                 {album.year && (
-                  <p style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300, marginTop: '6px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 400, letterSpacing: '0.1em', fontVariantNumeric: 'tabular-nums', color: 'var(--color-muted-foreground)', marginTop: '14px' }}>
                     {album.year}
                   </p>
                 )}
@@ -292,8 +330,9 @@ export default function AlbumDetail() {
               {/* Track list */}
               {tracks.length > 0 && (
                 <div style={{ paddingBottom: 48 }}>
-                  <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '0 24px', marginBottom: '4px' }}>
-                    Tracks
+                  <p style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '0 24px 4px' }}>
+                    <span>Tracks</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{String(tracks.length).padStart(2, '0')}</span>
                   </p>
                   <div>{trackRows}</div>
                 </div>
@@ -313,33 +352,35 @@ export default function AlbumDetail() {
           </div>
         ) : (
           /* ── Portrait: stacked ── */
-          <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
+          <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
 
             {/* Cover + vinyl */}
-            <div style={{ padding: '32px 32px 0', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ padding: '44px 32px 0', display: 'flex', justifyContent: 'center' }}>
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {/* Vinyl disc behind the art */}
                 <div style={{ position: 'absolute', right: -28, top: 110, transform: 'translateY(-50%)', zIndex: 0 }}>
-                  <VinylDisc size={200} />
+                  <motion.div initial={{ x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
+                    <VinylDisc size={200} />
+                  </motion.div>
                 </div>
 
                 {/* Album art */}
-                <motion.div
-                  initial={{ scale: 0.92, opacity: 0 }}
-                  animate={{ scale: 1,    opacity: 1 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                <div
+                  data-cover-slot={albumId}
+                  data-cover-page="detail"
                   style={{
+                    opacity:      coverHidden ? 0 : 1,
                     position:     'relative',
                     zIndex:        1,
                     width:         220,
                     height:        220,
                     borderRadius: '8px',
                     overflow:     'hidden',
-                    boxShadow:    '0 8px 32px rgba(0,0,0,0.12)',
+                    boxShadow:    '0 12px 36px rgba(0,0,0,0.14)',
                   }}
                 >
                   {artContent}
-                </motion.div>
+                </div>
 
                 {/* Floor reflection */}
                 {album.coverImage && (
@@ -367,19 +408,19 @@ export default function AlbumDetail() {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              style={{ padding: '20px 24px 0', textAlign: 'center' }}
+              transition={{ delay: 0.25, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              style={{ padding: '36px 32px 0', textAlign: 'center' }}
             >
               {album.artist && (
-                <p style={{ fontSize: '13px', fontWeight: 300, color: 'var(--color-muted-foreground)', marginBottom: '4px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '12px' }}>
                   {album.artist}
                 </p>
               )}
-              <h1 style={{ fontSize: '24px', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-foreground)', lineHeight: 1.2 }}>
+              <h1 style={{ fontSize: '30px', fontWeight: 500, letterSpacing: '-0.035em', color: 'var(--color-foreground)', lineHeight: 1.1, textWrap: 'balance' }}>
                 {album.title}
               </h1>
               {album.year && (
-                <p style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300, marginTop: '4px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 400, letterSpacing: '0.1em', fontVariantNumeric: 'tabular-nums', color: 'var(--color-muted-foreground)', marginTop: '14px' }}>
                   {album.year}
                 </p>
               )}
@@ -387,9 +428,10 @@ export default function AlbumDetail() {
 
             {/* Track list */}
             {tracks.length > 0 && (
-              <div style={{ padding: '28px 0 48px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '0 24px', marginBottom: '4px' }}>
-                  Tracks
+              <div style={{ padding: '44px 0 72px' }}>
+                <p style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '0 24px 4px' }}>
+                  <span>Tracks</span>
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{String(tracks.length).padStart(2, '0')}</span>
                 </p>
                 <div>{trackRows}</div>
               </div>
@@ -485,6 +527,7 @@ export default function AlbumDetail() {
             </motion.div>
           )}
         </AnimatePresence>
+        </motion.div>
       </PageTransition>
     </>
   )

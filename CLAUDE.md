@@ -20,7 +20,8 @@ SideA/
 │   │   │   ├── ImageUpload.jsx       # Drag-drop + client-side image compression
 │   │   │   └── TrackListEditor.jsx   # Drag-reorderable track list with lyrics expansion
 │   │   ├── layout/
-│   │   │   ├── AppShell.jsx          # Fixed nav header (back button, add button)
+│   │   │   ├── AppShell.jsx          # Top bar (back, title, Gallery/List switch) + bottom TabBar
+│   │   │   ├── TabBar.jsx            # Floating glass tab bar: Collection / Add / Profile
 │   │   │   └── PageTransition.jsx    # Framer Motion page animation wrapper
 │   │   └── ui/
 │   │       ├── Button.jsx            # CVA-based button with tap animation
@@ -94,8 +95,9 @@ Routes are defined in `src/App.jsx` using React Router DOM v7:
 
 | Path | Component | Description |
 |------|-----------|-------------|
-| `/` | `Wall` | Album gallery (home) |
-| `/add` | `AddRecord` | Add new album |
+| `/` | `Wall` | Collection tab: gallery or list (switch top-right) |
+| `/profile` | `Profile` | Stats, theme, sign in/out, backup (`/sync` redirects here) |
+| `/add` | `AddRecord` | Add tab: add new album |
 | `/album/:id` | `AlbumDetail` | Album detail view |
 | `/album/:id/edit` | `AddRecord` | Edit existing album |
 | `/album/:id/track/:trackId` | `Lyrics` | Track lyrics view |
@@ -193,7 +195,7 @@ The app uses a **soft neumorphism / iOS-inspired** aesthetic defined in `src/ind
 ## Image Handling
 
 Client-side image compression is applied in `ImageUpload.jsx` before storing:
-- Max dimension: **600px** (width or height)
+- Max dimension: **1000px** (width or height)
 - Format: **JPEG** at quality **0.82**
 - Stored as base64 data URL in Supabase
 

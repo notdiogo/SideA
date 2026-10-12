@@ -18,7 +18,7 @@ export default function EmptyState({ signedOut = false }) {
           <Disc3
             size={80}
             strokeWidth={1}
-            style={{ color: 'var(--color-border)' }}
+            style={{ color: 'var(--color-muted-foreground)', opacity: 0.45 }}
           />
         </motion.div>
       </div>
@@ -48,7 +48,7 @@ export default function EmptyState({ signedOut = false }) {
       </Link>
       {signedOut && (
         <Link
-          to="/sync"
+          to="/profile"
           className="text-sm transition-opacity hover:opacity-80"
           style={{ color: 'var(--color-muted-foreground)' }}
         >

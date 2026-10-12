@@ -1,7 +1,7 @@
 const UA = 'VinylApp/1.0 (contact@example.com)'
 const MB = 'https://musicbrainz.org/ws/2'
 const CAA = 'https://coverartarchive.org/release'
-const MAX_SIZE = 600
+const MAX_SIZE = 1000
 
 async function mbFetch(path) {
   const res = await fetch(`${MB}${path}`, {
@@ -46,7 +46,7 @@ export async function searchRelease(artist, album) {
 
 /**
  * Fetch the front cover art for a MusicBrainz release ID.
- * Returns a base64 jpeg data URL (max 600px), or null if unavailable.
+ * Returns a base64 jpeg data URL (max 1000px), or null if unavailable.
  */
 export async function fetchCoverAsBase64(mbid) {
   try {

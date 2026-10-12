@@ -18,7 +18,6 @@ const inputStyle = {
   color: 'var(--color-foreground)',
   fontSize: '15px',
   outline: 'none',
-  boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
 }
 
 function Field({ label, error, children }) {
@@ -26,11 +25,11 @@ function Field({ label, error, children }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <label
         style={{
-          fontSize: '12px',
+          fontSize: '11px',
           fontWeight: 500,
-          letterSpacing: '0.08em',
+          letterSpacing: '0.14em',
           textTransform: 'uppercase',
-          color: '#9A9A9A',
+          color: 'var(--color-muted-foreground)',
         }}
       >
         {label}
@@ -83,6 +82,7 @@ function AutoFillPanel({ onConfirm }) {
     <div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
         <input
+          className="field"
           style={inputStyle}
           value={artist}
           onChange={e => setArtist(e.target.value)}
@@ -91,6 +91,7 @@ function AutoFillPanel({ onConfirm }) {
           disabled={state === 'loading'}
         />
         <input
+          className="field"
           style={inputStyle}
           value={album}
           onChange={e => setAlbum(e.target.value)}
@@ -102,15 +103,15 @@ function AutoFillPanel({ onConfirm }) {
 
       {state !== 'preview' && (
         <motion.button
-          whileTap={{ scale: 0.97 }}
+          whileTap={state === 'loading' || !artist.trim() || !album.trim() ? undefined : { scale: 0.96 }}
           onClick={handleSearch}
           disabled={state === 'loading' || !artist.trim() || !album.trim()}
           style={{
             width: '100%',
-            padding: '13px',
-            borderRadius: '14px',
-            background: (state === 'loading' || !artist.trim() || !album.trim()) ? '#E5E5E5' : '#1A1A1A',
-            color: (state === 'loading' || !artist.trim() || !album.trim()) ? '#9A9A9A' : '#FFFFFF',
+            padding: '15px',
+            borderRadius: '999px',
+            background: (state === 'loading' || !artist.trim() || !album.trim()) ? 'var(--color-secondary)' : 'var(--color-primary)',
+            color: (state === 'loading' || !artist.trim() || !album.trim()) ? 'var(--color-muted-foreground)' : 'var(--color-primary-foreground)',
             fontSize: '15px',
             fontWeight: 600,
             display: 'flex',
@@ -154,9 +155,9 @@ function AutoFillPanel({ onConfirm }) {
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             style={{
               marginTop: '14px',
-              background: '#FFFFFF',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
+              background: 'var(--color-card)',
+              borderRadius: '20px',
+              boxShadow: 'inset 0 0 0 1px var(--color-border), 0 8px 28px rgba(0,0,0,0.06)',
               overflow: 'hidden',
             }}
           >
@@ -169,7 +170,7 @@ function AutoFillPanel({ onConfirm }) {
                   borderRadius: '10px',
                   overflow: 'hidden',
                   flexShrink: 0,
-                  background: '#E5E5E5',
+                  background: 'var(--color-secondary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -178,17 +179,17 @@ function AutoFillPanel({ onConfirm }) {
                 {preview.coverImage ? (
                   <img src={preview.coverImage} alt={preview.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <Music size={24} strokeWidth={1.5} style={{ color: '#9A9A9A' }} />
+                  <Music size={24} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
                 )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-foreground)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {preview.title}
                 </p>
-                <p style={{ fontSize: '13px', fontWeight: 300, color: '#9A9A9A', marginTop: '2px' }}>
+                <p style={{ fontSize: '13px', fontWeight: 300, color: 'var(--color-muted-foreground)', marginTop: '2px' }}>
                   {preview.artist}
                 </p>
-                <p style={{ fontSize: '12px', color: '#9A9A9A', marginTop: '6px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--color-muted-foreground)', marginTop: '6px' }}>
                   {preview.year && `${preview.year} · `}{preview.tracks.length} tracks
                 </p>
               </div>
@@ -197,14 +198,14 @@ function AutoFillPanel({ onConfirm }) {
             {/* Track list preview */}
             {preview.tracks.length > 0 && (
               <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', padding: '10px 14px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9A9A9A', marginBottom: '6px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '6px' }}>
                   Tracks
                 </p>
                 <div style={{ maxHeight: 120, overflowY: 'auto' }}>
                   {preview.tracks.map((t, i) => (
                     <div key={t.id} style={{ display: 'flex', gap: '10px', padding: '4px 0', fontSize: '13px' }}>
-                      <span style={{ color: '#9A9A9A', fontWeight: 300, width: 18, flexShrink: 0 }}>{i + 1}</span>
-                      <span style={{ color: '#1A1A1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
+                      <span style={{ color: 'var(--color-muted-foreground)', fontWeight: 300, width: 18, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{String(i + 1).padStart(2, '0')}</span>
+                      <span style={{ color: 'var(--color-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
                     </div>
                   ))}
                 </div>
@@ -214,21 +215,21 @@ function AutoFillPanel({ onConfirm }) {
             {/* Confirm / retry */}
             <div style={{ display: 'flex', gap: '8px', padding: '10px 14px 14px' }}>
               <motion.button
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => onConfirm(preview)}
                 style={{
-                  flex: 1, padding: '11px', borderRadius: '12px',
-                  background: '#1A1A1A', color: '#FFFFFF', fontSize: '14px', fontWeight: 600,
+                  flex: 1, padding: '13px', borderRadius: '999px',
+                  background: 'var(--color-primary)', color: 'var(--color-primary-foreground)', fontSize: '14px', fontWeight: 600,
                 }}
               >
                 Use this album
               </motion.button>
               <motion.button
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={handleReset}
                 style={{
-                  flex: 1, padding: '11px', borderRadius: '12px',
-                  background: '#E5E5E5', color: '#9A9A9A', fontSize: '14px', fontWeight: 500,
+                  flex: 1, padding: '13px', borderRadius: '999px',
+                  background: 'var(--color-secondary)', color: 'var(--color-muted-foreground)', fontSize: '14px', fontWeight: 500,
                 }}
               >
                 Try again
@@ -323,7 +324,7 @@ export default function AddRecord() {
       })
     } else {
       const album = await addAlbum(albumData)
-      navigate(`/album/${album.id}`)
+      navigate(`/album/${album.id}`, { replace: true })
       // Prefetch all track lyrics in the background after navigation
       prefetchAlbumLyrics(album.artist, album.tracks).then(tracksWithLyrics => {
         updateAlbum({ ...album, tracks: tracksWithLyrics })
@@ -333,37 +334,51 @@ export default function AddRecord() {
 
   return (
     <PageTransition>
-      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px 48px' }}>
+      <div style={{ width: '100%', maxWidth: '640px', margin: '0 auto', padding: '28px 20px calc(var(--tabbar-h, 0px) + 48px)' }}>
 
         {/* Mode toggle */}
         {!isEditing && (
           <div
+            className="glass"
             style={{
               display: 'flex',
-              background: '#E5E5E5',
-              borderRadius: '12px',
-              padding: '3px',
-              marginBottom: '24px',
+              position: 'relative',
+              borderRadius: '999px',
+              padding: '4px',
+              marginBottom: '32px',
             }}
           >
             {['autofill', 'manual'].map(m => (
               <motion.button
                 key={m}
-                whileTap={{ scale: 0.97 }}
+                type="button"
+                whileTap={{ scale: 0.96 }}
                 onClick={() => setMode(m)}
                 style={{
                   flex: 1,
-                  padding: '8px',
-                  borderRadius: '10px',
-                  background: mode === m ? '#FFFFFF' : 'transparent',
-                  color: mode === m ? '#1A1A1A' : '#9A9A9A',
+                  position: 'relative',
+                  padding: '10px',
+                  borderRadius: '999px',
+                  color: mode === m ? 'var(--color-foreground)' : 'var(--color-muted-foreground)',
                   fontSize: '14px',
-                  fontWeight: mode === m ? 600 : 400,
-                  boxShadow: mode === m ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                  transition: 'background 0.15s, color 0.15s',
+                  fontWeight: mode === m ? 500 : 400,
+                  letterSpacing: '-0.01em',
                 }}
               >
-                {m === 'autofill' ? 'Auto-fill' : 'Manual'}
+                {mode === m && (
+                  <motion.span
+                    layoutId="mode-thumb"
+                    transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: '999px',
+                      background: 'var(--glass-thumb)',
+                      boxShadow: 'inset 0 1px 0 var(--glass-highlight), 0 1px 6px var(--glass-shadow)',
+                    }}
+                  />
+                )}
+                <span style={{ position: 'relative' }}>{m === 'autofill' ? 'Auto-fill' : 'Manual'}</span>
               </motion.button>
             ))}
           </div>
@@ -383,10 +398,10 @@ export default function AddRecord() {
                   marginBottom: '20px',
                   padding: '10px 14px',
                   borderRadius: '10px',
-                  background: '#FFFFFF',
-                  boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+                  background: 'var(--color-card)',
+                  boxShadow: 'inset 0 0 0 1px var(--color-border)',
                   fontSize: '13px',
-                  color: '#9A9A9A',
+                  color: 'var(--color-muted-foreground)',
                   fontWeight: 300,
                 }}
               >
@@ -401,7 +416,8 @@ export default function AddRecord() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
               <Field label="Album title" error={errors.title}>
                 <input
-                  style={{ ...inputStyle, boxShadow: errors.title ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)' }}
+          className="field"
+                  style={{ ...inputStyle, boxShadow: errors.title ? '0 0 0 2px oklch(55% 0.18 25)' : undefined }}
                   value={form.title}
                   onChange={setInput('title')}
                   placeholder="e.g. Rumours"
@@ -409,7 +425,8 @@ export default function AddRecord() {
               </Field>
               <Field label="Artist" error={errors.artist}>
                 <input
-                  style={{ ...inputStyle, boxShadow: errors.artist ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)' }}
+          className="field"
+                  style={{ ...inputStyle, boxShadow: errors.artist ? '0 0 0 2px oklch(55% 0.18 25)' : undefined }}
                   value={form.artist}
                   onChange={setInput('artist')}
                   placeholder="e.g. Fleetwood Mac"
@@ -417,7 +434,8 @@ export default function AddRecord() {
               </Field>
               <Field label="Year" error={errors.year}>
                 <input
-                  style={{ ...inputStyle, boxShadow: errors.year ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)' }}
+          className="field"
+                  style={{ ...inputStyle, boxShadow: errors.year ? '0 0 0 2px oklch(55% 0.18 25)' : undefined }}
                   value={form.year}
                   onChange={setInput('year')}
                   placeholder="e.g. 1977"
@@ -428,19 +446,19 @@ export default function AddRecord() {
             </div>
 
             <div style={{ marginBottom: '32px' }}>
-              <h3 style={{ fontSize: '12px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9A9A9A', marginBottom: '12px' }}>
+              <h3 style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '12px' }}>
                 Track list
               </h3>
               <TrackListEditor tracks={form.tracks} onChange={set('tracks')} />
             </div>
 
             <motion.button
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.96 }}
               type="submit"
               disabled={saving}
               style={{
-                width: '100%', padding: '14px', borderRadius: '14px',
-                background: '#1A1A1A', color: '#FFFFFF', fontSize: '15px', fontWeight: 600,
+                width: '100%', padding: '16px', borderRadius: '999px',
+                background: 'var(--color-primary)', color: 'var(--color-primary-foreground)', fontSize: '15px', fontWeight: 600,
                 cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'opacity 0.2s',
               }}
             >

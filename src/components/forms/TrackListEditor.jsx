@@ -12,9 +12,9 @@ function TrackRow({ track, index, onChange, onDelete }) {
       <div
         style={{
           background: 'var(--color-card)',
-          borderRadius: '12px',
+          borderRadius: '14px',
           overflow: 'hidden',
-          boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+          boxShadow: 'inset 0 0 0 1px var(--color-border)',
           marginBottom: '8px',
         }}
       >
@@ -39,13 +39,15 @@ function TrackRow({ track, index, onChange, onDelete }) {
           <span
             style={{
               fontSize: '12px',
+              letterSpacing: '0.06em',
+              fontVariantNumeric: 'tabular-nums',
               color: 'var(--color-muted-foreground)',
               flexShrink: 0,
               width: '20px',
               textAlign: 'center',
             }}
           >
-            {index + 1}
+            {String(index + 1).padStart(2, '0')}
           </span>
 
           {/* Title input */}
@@ -67,7 +69,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
           {/* Lyrics toggle */}
           <motion.button
             type="button"
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => setExpanded(v => !v)}
             style={{
               display: 'flex',
@@ -82,7 +84,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
           {/* Delete */}
           <motion.button
             type="button"
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => onDelete(track.id)}
             style={{
               display: 'flex',
@@ -105,7 +107,7 @@ function TrackRow({ track, index, onChange, onDelete }) {
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               style={{ overflow: 'hidden' }}
             >
-              <div style={{ borderTop: '1px solid var(--color-border)', padding: '10px 12px' }}>
+              <div style={{ borderTop: '1px solid var(--color-border)', padding: '12px 14px', background: 'var(--color-secondary)' }}>
                 <textarea
                   value={track.lyrics}
                   onChange={(e) => onChange({ ...track, lyrics: e.target.value })}
@@ -167,23 +169,22 @@ export default function TrackListEditor({ tracks, onChange }) {
       </Reorder.Group>
 
       <motion.button
-        whileTap={{ scale: 0.97 }}
+        whileTap={{ scale: 0.96 }}
         onClick={handleAdd}
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
           width: '100%',
-          padding: '10px 12px',
-          borderRadius: '8px',
-          border: '1px dashed var(--color-border)',
+          padding: '14px 12px',
+          borderRadius: '14px',
+          border: '1.5px dashed color-mix(in oklab, var(--color-foreground) 22%, transparent)',
           color: 'var(--color-muted-foreground)',
           fontSize: '14px',
           background: 'transparent',
           cursor: 'pointer',
           justifyContent: 'center',
           marginTop: '4px',
-          transition: 'color 0.15s, border-color 0.15s',
         }}
       >
         <Plus size={15} />

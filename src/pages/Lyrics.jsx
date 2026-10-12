@@ -5,12 +5,20 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import { useSwipe } from '../hooks/useSwipe'
 import { useViewport } from '../hooks/useViewport'
+import PageTransition from '../components/layout/PageTransition'
 import { fetchLyrics } from '../lib/lyrics'
+import { sampleColor, setAmbient } from '../lib/ambient'
+
+const navButtonStyle = (disabled) => ({
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  width: 44, height: 44, borderRadius: '999px', background: 'transparent',
+  color: 'var(--color-foreground)', opacity: disabled ? 0.3 : 1, transition: 'opacity 0.2s',
+})
 
 export default function Lyrics() {
   const { albumId, trackId } = useParams()
   const navigate = useNavigate()
-  const { albums, updateAlbum } = useCollectionContext()
+  const { albums, loading, updateAlbum } = useCollectionContext()
   const [currentTrackId, setCurrentTrackId] = useState(trackId)
   const [direction, setDirection] = useState(0)
   const [fetchState, setFetchState] = useState('idle')
@@ -22,12 +30,20 @@ export default function Lyrics() {
   const album = albums.find(a => a.id === albumId)
 
   useEffect(() => {
-    if (!album) navigate('/', { replace: true })
-  }, [album, navigate])
+    // Wait for the local DB to load before treating a missing album as deleted
+    if (!album && !loading) navigate('/', { replace: true })
+  }, [album, loading, navigate])
 
   useEffect(() => {
     setCurrentTrackId(trackId)
   }, [trackId])
+
+  useEffect(() => {
+    if (!album?.coverImage) return
+    let live = true
+    sampleColor(album.coverImage).then(rgb => { if (live) setAmbient(rgb) }).catch(() => {})
+    return () => { live = false }
+  }, [album?.coverImage])
 
   if (!album) return null
 
@@ -133,7 +149,7 @@ export default function Lyrics() {
         </div>
       )}
       {fetchState === 'done' && updatedTrack.lyrics && (
-        <p style={{ fontSize: '18px', lineHeight: 'var(--leading-loose)', color: 'var(--color-foreground)', whiteSpace: 'pre-wrap', maxWidth: '68ch', margin: '0 auto', fontWeight: 400 }}>
+        <p style={{ fontSize: '18px', lineHeight: 'var(--leading-loose)', letterSpacing: '-0.005em', color: 'var(--color-foreground)', whiteSpace: 'pre-wrap', maxWidth: '68ch', margin: '0 auto', fontWeight: 400, textAlign: isTablet && isLandscape ? 'left' : 'center', textWrap: 'pretty' }}>
           {updatedTrack.lyrics}
         </p>
       )}
@@ -156,12 +172,12 @@ export default function Lyrics() {
   // ── Landscape two-column layout (tablet only) ─────────────────────────────
   if (isTablet && isLandscape) {
     return (
+      <PageTransition>
       <div
         style={{
           height:        'calc(100dvh - var(--nav-height))',
           display:       'flex',
           flexDirection: 'row',
-          background:    'var(--color-background)',
         }}
         {...swipeHandlers}
       >
@@ -192,20 +208,20 @@ export default function Lyrics() {
               {currentIndex + 1} / {tracks.length}
             </span>
             {navDots}
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="glass" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 999, alignSelf: 'flex-start' }}>
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={goPrev}
                 disabled={isPrevDisabled}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isPrevDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isPrevDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
+                style={navButtonStyle(isPrevDisabled)}
               >
                 <ChevronLeft size={20} strokeWidth={1.5} />
               </motion.button>
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={goNext}
                 disabled={isNextDisabled}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isNextDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isNextDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
+                style={navButtonStyle(isNextDisabled)}
               >
                 <ChevronRight size={20} strokeWidth={1.5} />
               </motion.button>
@@ -230,11 +246,13 @@ export default function Lyrics() {
           </AnimatePresence>
         </div>
       </div>
+      </PageTransition>
     )
   }
 
   // ── Portrait layout ───────────────────────────────────────────────────────
   return (
+    <PageTransition>
     <div
       style={{
         height:        'calc(100dvh - var(--nav-height))',
@@ -242,7 +260,6 @@ export default function Lyrics() {
         flexDirection: 'column',
         position:      'relative',
         overflow:      'hidden',
-        background:    'var(--color-background)',
       }}
       {...swipeHandlers}
     >
@@ -266,11 +283,11 @@ export default function Lyrics() {
             onScroll={handleScroll}
           >
             {/* Track header — scrolls with the lyrics */}
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <p style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '6px', fontWeight: 500 }}>
+            <div style={{ textAlign: 'center', marginBottom: '36px', paddingTop: '8px' }}>
+              <p style={{ fontSize: '11px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '10px', fontWeight: 500 }}>
                 {album.title}
               </p>
-              <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--color-foreground)', lineHeight: 1.25 }}>
+              <h1 style={{ fontSize: '24px', fontWeight: 500, letterSpacing: '-0.03em', color: 'var(--color-foreground)', lineHeight: 1.15, textWrap: 'balance' }}>
                 {updatedTrack.title}
               </h1>
             </div>
@@ -280,28 +297,28 @@ export default function Lyrics() {
         </AnimatePresence>
       </div>
 
-      {/* Auto-hide navigation bar — slides out on scroll-down / after 2s */}
+      {/* Floating glass control — slides out on scroll-down / after 2s */}
       <motion.div
-        animate={{ y: navVisible ? 0 : '100%' }}
+        className="glass"
+        animate={{ y: navVisible ? 0 : 'calc(100% + 32px)' }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         style={{
-          position:            'absolute',
-          bottom:               0,
-          left:                 0,
-          right:                0,
-          display:             'flex',
-          alignItems:          'center',
-          justifyContent:      'space-between',
-          padding:             '16px 24px',
-          paddingBottom:       'max(16px, env(safe-area-inset-bottom))',
-          background:          'transparent',
+          position:       'absolute',
+          bottom:         'max(16px, env(safe-area-inset-bottom))',
+          left:            16,
+          right:           16,
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'space-between',
+          padding:        '8px 10px',
+          borderRadius:    999,
         }}
       >
         <motion.button
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.96 }}
           onClick={goPrev}
           disabled={isPrevDisabled}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isPrevDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isPrevDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
+          style={navButtonStyle(isPrevDisabled)}
         >
           <ChevronLeft size={20} strokeWidth={1.5} />
         </motion.button>
@@ -314,14 +331,15 @@ export default function Lyrics() {
         </div>
 
         <motion.button
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.96 }}
           onClick={goNext}
           disabled={isNextDisabled}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '999px', background: isNextDisabled ? 'transparent' : 'var(--color-secondary)', color: 'var(--color-muted-foreground)', opacity: isNextDisabled ? 0.35 : 1, transition: 'opacity 0.2s' }}
+          style={navButtonStyle(isNextDisabled)}
         >
           <ChevronRight size={20} strokeWidth={1.5} />
         </motion.button>
       </motion.div>
     </div>
+    </PageTransition>
   )
 }
