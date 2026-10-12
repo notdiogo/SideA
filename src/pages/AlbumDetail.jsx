@@ -113,26 +113,30 @@ export default function AlbumDetail() {
       whileTap={{ backgroundColor: 'var(--color-secondary)' }}
       onClick={() => navigate(`/album/${albumId}/track/${track.id}`)}
       style={{
-        display:      'flex',
-        alignItems:   'center',
-        gap:           16,
-        width:        '100%',
-        padding:      '14px 24px',
-        background:   'transparent',
-        borderBottom: '1px solid var(--color-border)',
-        borderTop:     i === 0 ? '1px solid var(--color-border)' : 'none',
-        textAlign:    'left',
-        cursor:       'pointer',
-        transition:   'background 0.15s',
+        display:    'block',
+        width:      '100%',
+        padding:    '0 24px',
+        background: 'transparent',
+        textAlign:  'left',
+        cursor:     'pointer',
       }}
     >
-      <span style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300, width: '24px', flexShrink: 0, textAlign: 'center' }}>
-        {i + 1}
-      </span>
-      <span style={{ fontSize: '15px', fontWeight: 400, color: 'var(--color-foreground)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {track.title || 'Untitled'}
-      </span>
-      <span style={{ color: 'var(--color-muted-foreground)', fontSize: '18px' }}>›</span>
+      <div
+        style={{
+          display:      'flex',
+          alignItems:   'baseline',
+          gap:           18,
+          padding:      '17px 0',
+          borderBottom: '1px solid var(--color-border)',
+        }}
+      >
+        <span style={{ fontSize: '12px', letterSpacing: '0.06em', fontVariantNumeric: 'tabular-nums', color: 'var(--color-muted-foreground)', fontWeight: 400, width: '20px', flexShrink: 0 }}>
+          {String(i + 1).padStart(2, '0')}
+        </span>
+        <span style={{ fontSize: '15px', fontWeight: 400, letterSpacing: '-0.01em', color: 'var(--color-foreground)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {track.title || 'Untitled'}
+        </span>
+      </div>
     </motion.button>
   ))
 
@@ -302,15 +306,15 @@ export default function AlbumDetail() {
                 style={{ paddingBottom: 28 }}
               >
                 {album.artist && (
-                  <p style={{ fontSize: '13px', fontWeight: 300, color: 'var(--color-muted-foreground)', marginBottom: '6px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '12px' }}>
                     {album.artist}
                   </p>
                 )}
-                <h1 style={{ fontSize: '28px', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-foreground)', lineHeight: 1.15 }}>
+                <h1 style={{ fontSize: '34px', fontWeight: 500, letterSpacing: '-0.035em', color: 'var(--color-foreground)', lineHeight: 1.1, textWrap: 'balance' }}>
                   {album.title}
                 </h1>
                 {album.year && (
-                  <p style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300, marginTop: '6px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 400, letterSpacing: '0.1em', fontVariantNumeric: 'tabular-nums', color: 'var(--color-muted-foreground)', marginTop: '14px' }}>
                     {album.year}
                   </p>
                 )}
@@ -319,8 +323,9 @@ export default function AlbumDetail() {
               {/* Track list */}
               {tracks.length > 0 && (
                 <div style={{ paddingBottom: 48 }}>
-                  <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '0 24px', marginBottom: '4px' }}>
-                    Tracks
+                  <p style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '0 24px 4px' }}>
+                    <span>Tracks</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{String(tracks.length).padStart(2, '0')}</span>
                   </p>
                   <div>{trackRows}</div>
                 </div>
@@ -343,7 +348,7 @@ export default function AlbumDetail() {
           <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
 
             {/* Cover + vinyl */}
-            <div style={{ padding: '32px 32px 0', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ padding: '44px 32px 0', display: 'flex', justifyContent: 'center' }}>
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {/* Vinyl disc behind the art */}
                 <div style={{ position: 'absolute', right: -28, top: 110, transform: 'translateY(-50%)', zIndex: 0 }}>
@@ -397,18 +402,18 @@ export default function AlbumDetail() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              style={{ padding: '20px 24px 0', textAlign: 'center' }}
+              style={{ padding: '36px 32px 0', textAlign: 'center' }}
             >
               {album.artist && (
-                <p style={{ fontSize: '13px', fontWeight: 300, color: 'var(--color-muted-foreground)', marginBottom: '4px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '12px' }}>
                   {album.artist}
                 </p>
               )}
-              <h1 style={{ fontSize: '24px', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-foreground)', lineHeight: 1.2 }}>
+              <h1 style={{ fontSize: '30px', fontWeight: 500, letterSpacing: '-0.035em', color: 'var(--color-foreground)', lineHeight: 1.1, textWrap: 'balance' }}>
                 {album.title}
               </h1>
               {album.year && (
-                <p style={{ fontSize: '13px', color: 'var(--color-muted-foreground)', fontWeight: 300, marginTop: '4px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 400, letterSpacing: '0.1em', fontVariantNumeric: 'tabular-nums', color: 'var(--color-muted-foreground)', marginTop: '14px' }}>
                   {album.year}
                 </p>
               )}
@@ -416,9 +421,10 @@ export default function AlbumDetail() {
 
             {/* Track list */}
             {tracks.length > 0 && (
-              <div style={{ padding: '28px 0 48px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '0 24px', marginBottom: '4px' }}>
-                  Tracks
+              <div style={{ padding: '44px 0 72px' }}>
+                <p style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '0 24px 4px' }}>
+                  <span>Tracks</span>
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{String(tracks.length).padStart(2, '0')}</span>
                 </p>
                 <div>{trackRows}</div>
               </div>
