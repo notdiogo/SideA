@@ -23,10 +23,29 @@ export async function searchRelease(artist, album) {
   const releases = search.releases ?? []
   if (releases.length === 0) throw new Error('No album found')
 
-  const top = releases[0]
+  return loadRelease(releases[0], artist)
+}
+
+/**
+ * Look up a release by barcode (UPC/EAN). Same return shape as searchRelease.
+ * Throws 'No album found' if the barcode is unknown.
+ */
+export async function searchReleaseByBarcode(barcode) {
+  const q = encodeURIComponent(`barcode:${barcode}`)
+  const search = await mbFetch(`/release/?query=${q}&fmt=json&limit=5`)
+
+  const releases = search.releases ?? []
+  if (releases.length === 0) throw new Error('No album found')
+
+  // Prefer a vinyl pressing when several releases share the barcode
+  const isVinyl = r => (r.media ?? []).some(m => /vinyl/i.test(m.format ?? ''))
+  return loadRelease(releases.find(isVinyl) ?? releases[0], '')
+}
+
+async function loadRelease(top, fallbackArtist) {
   const mbid = top.id
   const title = top.title
-  const artistName = top['artist-credit']?.[0]?.name ?? artist
+  const artistName = top['artist-credit']?.[0]?.name ?? fallbackArtist
   const date = top.date ?? ''
   const year = date.slice(0, 4) || ''
 
