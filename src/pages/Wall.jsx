@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion'
 import { useGesture } from '@use-gesture/react'
-import { Music, ChevronRight } from 'lucide-react'
+import { Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import EmptyState from '../components/ui/EmptyState'
+import AlbumList from '../components/ui/AlbumList'
 import PageTransition from '../components/layout/PageTransition'
 import { sampleColor, setAmbient } from '../lib/ambient'
 import { useFlight, startFlight, coverEl, rectOf } from '../lib/coverFlight'
@@ -254,105 +255,9 @@ export default function Wall() {
 
   // ── List view ─────────────────────────────────────────────────────────────
   if (viewMode === 'list') {
-    // Group by the artist's initial; anything non-alphabetic goes under "#"
-    const groups = []
-    sorted.forEach(album => {
-      const ch = (album.artist || album.title || '#').trim().charAt(0).toUpperCase()
-      const letter = /[A-Z]/.test(ch) ? ch : '#'
-      const last = groups[groups.length - 1]
-      if (last && last.letter === letter) last.items.push(album)
-      else groups.push({ letter, items: [album] })
-    })
-    let rowIndex = 0
-
     return (
       <PageTransition>
-        <div
-          style={{
-            overflowY: 'auto',
-            height:    'calc(100dvh - var(--nav-height))',
-          }}
-        >
-          <div style={{ width: '100%', maxWidth: 640, margin: '0 auto', padding: '8px 20px calc(48px + env(safe-area-inset-bottom))' }}>
-            {groups.map(group => (
-              <section key={group.letter}>
-                <p
-                  style={{
-                    padding:       '28px 0 10px',
-                    fontSize:      11,
-                    fontWeight:    500,
-                    letterSpacing: '0.14em',
-                    color:         'var(--color-muted-foreground)',
-                  }}
-                >
-                  {group.letter}
-                </p>
-                {group.items.map(album => {
-                  const i = rowIndex++
-                  return (
-                    <motion.button
-                      key={album.id}
-                      type="button"
-                      onClick={() => navigate(`/album/${album.id}`)}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.35, delay: Math.min(i, 10) * 0.03, ease: [0.16, 1, 0.3, 1] }}
-                      whileTap={{ scale: 0.98 }}
-                      style={{
-                        display:    'flex',
-                        alignItems: 'center',
-                        gap:         16,
-                        width:      '100%',
-                        padding:    '8px 0',
-                        background: 'none',
-                        cursor:     'pointer',
-                        textAlign:  'left',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width:          60,
-                          height:         60,
-                          borderRadius:    6,
-                          overflow:       'hidden',
-                          flexShrink:      0,
-                          background:     'var(--color-secondary)',
-                          boxShadow:      '0 4px 14px rgba(0,0,0,0.12)',
-                          display:        'flex',
-                          alignItems:     'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        {album.coverImage ? (
-                          <img
-                            src={album.coverImage}
-                            alt=""
-                            draggable={false}
-                            loading="lazy"
-                            decoding="async"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        ) : (
-                          <Music size={20} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
-                        )}
-                      </div>
-
-                      <div style={{ flex: 1, minWidth: 0, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}>
-                        <p style={{ fontSize: 15, fontWeight: 500, letterSpacing: '-0.015em', color: 'var(--color-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {album.title}
-                        </p>
-                        <p style={{ display: 'flex', gap: 8, fontSize: 12, fontWeight: 400, color: 'var(--color-muted-foreground)', marginTop: 4, whiteSpace: 'nowrap' }}>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{album.artist}</span>
-                          {album.year && <span style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '0.04em', flexShrink: 0 }}>· {album.year}</span>}
-                        </p>
-                      </div>
-                    </motion.button>
-                  )
-                })}
-              </section>
-            ))}
-          </div>
-        </div>
+        <AlbumList albums={sorted} onOpen={(album) => navigate(`/album/${album.id}`)} />
       </PageTransition>
     )
   }
