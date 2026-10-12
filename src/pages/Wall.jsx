@@ -313,8 +313,9 @@ export default function Wall() {
           })}
         </motion.div>
 
-        {/* Centered label — only for the active album */}
-        <motion.div style={{ opacity: labelOpacity, width: '100%', maxWidth: 400, display: 'flex', justifyContent: 'center' }}>
+        {/* Centered label — only for the active album. Fixed-height slot, top-aligned, so a
+            long title that wraps never shifts the covers between albums. */}
+        <motion.div style={{ opacity: labelOpacity, width: '100%', maxWidth: 520, height: 132, marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={current.id}
@@ -322,22 +323,17 @@ export default function Wall() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                marginTop:  28,
-                textAlign:  'center',
-                padding:    '0 32px',
-                width:      '100%',
-              }}
+              style={{ textAlign: 'center', padding: '0 24px', width: '100%' }}
             >
               <p
                 style={{
-                  fontSize:      18,
-                  fontWeight:    600,
+                  fontSize:      24,
+                  fontWeight:    500,
+                  lineHeight:    1.15,
                   color:         'var(--color-foreground)',
-                  letterSpacing: '-0.02em',
-                  overflow:      'hidden',
-                  textOverflow:  'ellipsis',
-                  whiteSpace:    'nowrap',
+                  letterSpacing: '-0.03em',
+                  textWrap:      'balance',
+                  overflowWrap:  'anywhere',
                 }}
               >
                 {current.title}
@@ -345,13 +341,14 @@ export default function Wall() {
               {current.artist && (
                 <p
                   style={{
-                    fontSize:     14,
-                    fontWeight:   300,
-                    color:        'var(--color-muted-foreground)',
-                    marginTop:    4,
-                    overflow:     'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace:   'nowrap',
+                    fontSize:      17,
+                    fontWeight:    400,
+                    lineHeight:    1.25,
+                    color:         'var(--color-muted-foreground)',
+                    letterSpacing: '-0.01em',
+                    marginTop:     8,
+                    textWrap:      'balance',
+                    overflowWrap:  'anywhere',
                   }}
                 >
                   {current.artist}
