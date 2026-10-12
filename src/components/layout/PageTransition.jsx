@@ -19,11 +19,11 @@ const variants = {
 // Set by the in-app back control / pinch-out so a POP navigation still animates
 // (and morphs the cover back into the carousel).
 export const backNav = { current: false }
-export function goBack(navigate) {
+export function goBack(navigate, { velocityY = 0 } = {}) {
   const id = window.location.pathname.match(/\/album\/([^/]+)$/)?.[1]
   const el = id && coverEl(id, 'detail')
   const src = el?.querySelector('img')?.src
-  if (el && src) startFlight({ id, src, dir: 'out', from: rectOf(el) })
+  if (el && src) startFlight({ id, src, dir: 'out', from: rectOf(el), velocityY })
   backNav.current = true
   setTimeout(() => { backNav.current = false }, 800)
   if (window.history.state?.idx > 0) navigate(-1)

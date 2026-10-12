@@ -36,7 +36,7 @@ export default function CoverFlight() {
       radius.set(8 / ((1 + to.w / from.w) / 2))
       const run = Promise.all([
         animate(x, to.x - from.x, FLIGHT),
-        animate(y, to.y - from.y, FLIGHT),
+        animate(y, to.y - from.y, { ...FLIGHT, velocity: flight.velocityY ?? 0 }),
         animate(s, to.w / from.w, FLIGHT),
       ].map(c => (controls.push(c), c)))
       run.then(() => { if (!cancelled) endFlight() })

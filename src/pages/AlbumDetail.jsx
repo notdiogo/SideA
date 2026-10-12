@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence, animate, useMotionValue } from 'framer-motion'
-import { useGesture } from '@use-gesture/react'
+import { motion, AnimatePresence, animate, useMotionValue, useTransform, frame } from 'framer-motion'
+import { useGesture, useDrag } from '@use-gesture/react'
 import { MoreHorizontal, Edit3, Trash2, Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import { useViewport } from '../hooks/useViewport'
 import PageTransition, { goBack } from '../components/layout/PageTransition'
 import { useFlight } from '../lib/coverFlight'
 import { sampleColor, setAmbient } from '../lib/ambient'
+
+const CLOSE_DIST = 90   // px of downward drag that commits to going back
+const CLOSE_VEL  = 500  // px/s downward flick that goes back from a shorter drag
 
 // Entrance choreography after the cover lands: cover (0–.55s) → vinyl (.3) → metadata (.25) → tracks (.35+)
 const trackVariants = {
@@ -46,7 +49,7 @@ export default function AlbumDetail() {
 
   const album = albums.find(a => a.id === albumId)
   const flight = useFlight()
-  const coverHidden = flight?.id === albumId && flight.dir === 'in'
+  const coverHidden = flight?.id === albumId // the flight overlay stands in for the cover
 
   useEffect(() => {
     if (!album?.coverImage) return
@@ -54,6 +57,25 @@ export default function AlbumDetail() {
     sampleColor(album.coverImage).then(rgb => { if (live) setAmbient(rgb) }).catch(() => {})
     return () => { live = false }
   }, [album?.coverImage])
+
+  // Swipe down on the cover: it follows the finger, the page content recedes, and releasing
+  // past the threshold flies the cover back into the gallery (the reverse of swipe-up-to-open)
+  const coverY = useMotionValue(0)
+  const coverScale = useTransform(coverY, [0, 240], [1, 0.9])
+  const contentFade = useTransform(coverY, [0, 150], [1, 0])
+  const coverAnim = useRef(null)
+  const bindCover = useDrag(
+    ({ first, last, movement: [, my], velocity: [, vy], direction: [, diry] }) => {
+      if (first) coverAnim.current?.stop()
+      coverY.set(my > 0 ? my : my * 0.2) // upward only gives a little resistance
+      if (!last) return
+      const vY = diry * vy * 1000 // px/s, positive = downward
+      // postRender: measure the cover only after Motion has painted the final drag position
+      if (my > CLOSE_DIST || (vY > CLOSE_VEL && my > 24)) frame.postRender(() => goBack(navigate, { velocityY: vY }))
+      else coverAnim.current = animate(coverY, 0, { type: 'spring', stiffness: 380, damping: 36, velocity: vY })
+    },
+    { axis: 'y', threshold: 6, eventOptions: { passive: false } }
+  )
 
   // Pinch in to zoom back out to the carousel
   const pinchScale = useMotionValue(1)
@@ -257,17 +279,22 @@ export default function AlbumDetail() {
             >
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {/* Vinyl disc behind the art */}
-                <div style={{ position: 'absolute', right: -28, top: 130, transform: 'translateY(-50%)', zIndex: 0 }}>
+                <motion.div style={{ position: 'absolute', right: -28, top: 130, transform: 'translateY(-50%)', zIndex: 0, opacity: contentFade }}>
                   <motion.div initial={{ x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
                     <VinylDisc size={220} />
                   </motion.div>
-                </div>
+                </motion.div>
 
                 {/* Album art */}
-                <div
+                <motion.div
                   data-cover-slot={albumId}
                   data-cover-page="detail"
+                  {...bindCover()}
                   style={{
+                    y: coverY,
+                    scale: coverScale,
+                    touchAction: 'none',
+                    cursor: 'grab',
                     opacity:      coverHidden ? 0 : 1,
                     position:     'relative',
                     zIndex:        1,
@@ -279,11 +306,11 @@ export default function AlbumDetail() {
                   }}
                 >
                   {artContent}
-                </div>
+                </motion.div>
 
                 {/* Floor reflection */}
                 {album.coverImage && (
-                  <div style={{ position: 'relative', zIndex: 1, width: 260, height: 52, overflow: 'hidden', borderRadius: '8px 8px 0 0' }}>
+                  <motion.div style={{ position: 'relative', zIndex: 1, width: 260, height: 52, overflow: 'hidden', borderRadius: '8px 8px 0 0', opacity: contentFade }}>
                     <img
                       src={album.coverImage}
                       alt=""
@@ -298,13 +325,13 @@ export default function AlbumDetail() {
                         maskImage:       'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%)',
                       }}
                     />
-                  </div>
+                  </motion.div>
                 )}
               </div>
             </div>
 
             {/* Right: metadata + tracks */}
-            <div style={{ flex: 1, paddingTop: 4 }}>
+            <motion.div style={{ flex: 1, paddingTop: 4, opacity: contentFade }}>
               {/* Metadata — left aligned in landscape */}
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
@@ -348,7 +375,7 @@ export default function AlbumDetail() {
                   </p>
                 </div>
               )}
-            </div>
+            </motion.div>
           </div>
         ) : (
           /* ── Portrait: stacked ── */
@@ -358,17 +385,22 @@ export default function AlbumDetail() {
             <div style={{ padding: '44px 32px 0', display: 'flex', justifyContent: 'center' }}>
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {/* Vinyl disc behind the art */}
-                <div style={{ position: 'absolute', right: -28, top: 110, transform: 'translateY(-50%)', zIndex: 0 }}>
+                <motion.div style={{ position: 'absolute', right: -28, top: 110, transform: 'translateY(-50%)', zIndex: 0, opacity: contentFade }}>
                   <motion.div initial={{ x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
                     <VinylDisc size={200} />
                   </motion.div>
-                </div>
+                </motion.div>
 
                 {/* Album art */}
-                <div
+                <motion.div
                   data-cover-slot={albumId}
                   data-cover-page="detail"
+                  {...bindCover()}
                   style={{
+                    y: coverY,
+                    scale: coverScale,
+                    touchAction: 'none',
+                    cursor: 'grab',
                     opacity:      coverHidden ? 0 : 1,
                     position:     'relative',
                     zIndex:        1,
@@ -380,11 +412,11 @@ export default function AlbumDetail() {
                   }}
                 >
                   {artContent}
-                </div>
+                </motion.div>
 
                 {/* Floor reflection */}
                 {album.coverImage && (
-                  <div style={{ position: 'relative', zIndex: 1, width: 220, height: 44, overflow: 'hidden', borderRadius: '8px 8px 0 0' }}>
+                  <motion.div style={{ position: 'relative', zIndex: 1, width: 220, height: 44, overflow: 'hidden', borderRadius: '8px 8px 0 0', opacity: contentFade }}>
                     <img
                       src={album.coverImage}
                       alt=""
@@ -399,11 +431,12 @@ export default function AlbumDetail() {
                         maskImage:       'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%)',
                       }}
                     />
-                  </div>
+                  </motion.div>
                 )}
               </div>
             </div>
 
+            <motion.div style={{ opacity: contentFade }}>
             {/* Metadata */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -447,6 +480,7 @@ export default function AlbumDetail() {
                 </p>
               </div>
             )}
+            </motion.div>
           </div>
         )}
 
