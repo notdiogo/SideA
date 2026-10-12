@@ -37,10 +37,14 @@ const buttonStyle = (disabled) => ({
   width: '100%',
   padding: 15,
   borderRadius: 999,
-  background: disabled ? 'var(--color-secondary)' : 'var(--color-foreground)',
-  color: disabled ? 'var(--color-muted-foreground)' : 'var(--color-background)',
+  // Disabled keeps the filled shape (dimmed) so it still reads as a button, not a field
+  background: 'var(--color-foreground)',
+  color: 'var(--color-background)',
+  opacity: disabled ? 0.35 : 1,
+  cursor: disabled ? 'default' : 'pointer',
   fontSize: 15,
-  fontWeight: 600,
+  fontWeight: 500,
+  letterSpacing: '-0.01em',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -97,7 +101,7 @@ function SignIn() {
       )}
       {error && <p style={{ fontSize: 13, color: 'oklch(55% 0.18 25)', margin: 0 }}>{error}</p>}
       <motion.button
-        whileTap={{ scale: 0.96 }} type="submit"
+        whileTap={busy || !(step === 'email' ? email.trim() : code.trim()) ? undefined : { scale: 0.96 }} type="submit"
         disabled={busy || !(step === 'email' ? email.trim() : code.trim())}
         style={buttonStyle(busy || !(step === 'email' ? email.trim() : code.trim()))}
       >
