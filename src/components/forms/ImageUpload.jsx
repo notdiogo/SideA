@@ -76,10 +76,9 @@ export default function ImageUpload({ value, onChange }) {
           position: 'relative',
           border: isDragging
             ? '2px solid var(--color-primary)'
-            : value ? 'none' : '2px dashed rgba(0,0,0,0.15)',
+            : value ? 'none' : '1.5px dashed color-mix(in oklab, var(--color-foreground) 22%, transparent)',
           background: value ? 'transparent' : 'var(--color-card)',
-          transition: 'border-color 0.2s',
-          boxShadow: value ? '0 8px 32px rgba(0,0,0,0.1)' : '0 2px 12px rgba(0,0,0,0.06)',
+          boxShadow: value ? '0 12px 36px rgba(0,0,0,0.14)' : 'none',
         }}
       >
         {value ? (
@@ -89,23 +88,23 @@ export default function ImageUpload({ value, onChange }) {
               alt="Cover"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
+            {/* Replace-cover badge (works on touch, unlike a hover overlay) */}
             <div
+              className="glass"
               style={{
                 position: 'absolute',
-                inset: 0,
-                background: 'rgba(0,0,0,0)',
+                right: 10,
+                bottom: 10,
+                width: 36,
+                height: 36,
+                borderRadius: 999,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'background 0.2s',
+                color: 'var(--color-foreground)',
               }}
-              className="group hover:bg-black/40"
             >
-              <Camera
-                size={24}
-                style={{ color: 'white', opacity: 0, transition: 'opacity 0.2s' }}
-                className="group-hover:opacity-100"
-              />
+              <Camera size={16} strokeWidth={1.5} />
             </div>
           </>
         ) : (
@@ -122,7 +121,7 @@ export default function ImageUpload({ value, onChange }) {
             }}
           >
             <Camera size={32} strokeWidth={1.2} />
-            <span style={{ fontSize: '13px' }}>Tap to add cover</span>
+            <span style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Add cover</span>
           </div>
         )}
       </motion.div>

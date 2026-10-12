@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, animate, useMotionValue } from 'framer-motion'
 import { useGesture } from '@use-gesture/react'
@@ -20,7 +21,7 @@ const trackVariants = {
 function VinylDisc({ size = 180 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 180 180" fill="none" aria-hidden="true">
-      <circle cx="90" cy="90" r="89" fill="#1C1C1E" />
+      <circle cx="90" cy="90" r="89" fill="#1C1C1E" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
       <circle cx="90" cy="90" r="75" stroke="#2C2C2E" strokeWidth="1" />
       <circle cx="90" cy="90" r="62" stroke="#2C2C2E" strokeWidth="1" />
       <circle cx="90" cy="90" r="50" stroke="#2C2C2E" strokeWidth="1" />
@@ -35,7 +36,7 @@ function VinylDisc({ size = 180 }) {
 export default function AlbumDetail() {
   const { albumId } = useParams()
   const navigate = useNavigate()
-  const { albums, removeAlbum } = useCollectionContext()
+  const { albums, loading, removeAlbum } = useCollectionContext()
   const [showOptions, setShowOptions] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const optionsRef = useRef(null)
@@ -66,8 +67,9 @@ export default function AlbumDetail() {
   )
 
   useEffect(() => {
-    if (!album) navigate('/', { replace: true })
-  }, [album, navigate])
+    // Wait for the local DB to load before treating a missing album as deleted
+    if (!album && !loading) navigate('/', { replace: true })
+  }, [album, loading, navigate])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -142,8 +144,8 @@ export default function AlbumDetail() {
 
   return (
     <>
-      {/* ── Options button — outside PageTransition so position:fixed isn't
-           broken by the parent transform animation ── */}
+      {/* ── Options button — portalled so it stays above the header fade ── */}
+      {createPortal(
       <div
         ref={optionsRef}
         style={{ position: 'fixed', top: 10, right: 16, zIndex: 35 }}
@@ -222,7 +224,9 @@ export default function AlbumDetail() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </div>,
+        document.body
+      )}
 
       <PageTransition>
         <motion.div {...bindPinch()} style={{ scale: pinchScale, flex: 1, minWidth: 0, width: '100%', touchAction: 'pan-y', transformOrigin: '50% 30%' }}>

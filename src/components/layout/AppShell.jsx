@@ -67,6 +67,8 @@ export default function AppShell({ children }) {
           padding:             '0 16px',
           paddingTop:          'env(safe-area-inset-top)',
           pointerEvents:       'none',
+          // Scroll-edge fade: content dissolves under the title instead of colliding with it
+          background:          'linear-gradient(to bottom, color-mix(in oklab, var(--color-background) 92%, transparent) 55%, transparent)',
         }}
       >
         {/* Left: back button */}

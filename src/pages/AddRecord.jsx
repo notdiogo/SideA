@@ -204,7 +204,7 @@ function AutoFillPanel({ onConfirm }) {
                 <div style={{ maxHeight: 120, overflowY: 'auto' }}>
                   {preview.tracks.map((t, i) => (
                     <div key={t.id} style={{ display: 'flex', gap: '10px', padding: '4px 0', fontSize: '13px' }}>
-                      <span style={{ color: 'var(--color-muted-foreground)', fontWeight: 300, width: 18, flexShrink: 0 }}>{i + 1}</span>
+                      <span style={{ color: 'var(--color-muted-foreground)', fontWeight: 300, width: 18, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{String(i + 1).padStart(2, '0')}</span>
                       <span style={{ color: 'var(--color-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
                     </div>
                   ))}
@@ -373,8 +373,8 @@ export default function AddRecord() {
                       position: 'absolute',
                       inset: 0,
                       borderRadius: '999px',
-                      background: 'var(--color-card)',
-                      boxShadow: '0 1px 6px rgba(0,0,0,0.1)',
+                      background: 'var(--glass-thumb)',
+                      boxShadow: 'inset 0 1px 0 var(--glass-highlight), 0 1px 6px var(--glass-shadow)',
                     }}
                   />
                 )}

@@ -18,7 +18,7 @@ const cardStyle = {
   background: 'var(--color-card)',
   borderRadius: 20,
   padding: 24,
-  boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+  boxShadow: 'inset 0 0 0 1px var(--color-border), 0 8px 28px rgba(0,0,0,0.06)',
   display: 'flex',
   flexDirection: 'column',
   gap: 16,
@@ -37,8 +37,8 @@ const inputStyle = {
 
 const buttonStyle = (disabled) => ({
   width: '100%',
-  padding: 13,
-  borderRadius: 14,
+  padding: 15,
+  borderRadius: 999,
   background: disabled ? 'var(--color-secondary)' : 'var(--color-foreground)',
   color: disabled ? 'var(--color-muted-foreground)' : 'var(--color-background)',
   fontSize: 15,

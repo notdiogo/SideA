@@ -17,7 +17,7 @@ const navButtonStyle = (disabled) => ({
 export default function Lyrics() {
   const { albumId, trackId } = useParams()
   const navigate = useNavigate()
-  const { albums, updateAlbum } = useCollectionContext()
+  const { albums, loading, updateAlbum } = useCollectionContext()
   const [currentTrackId, setCurrentTrackId] = useState(trackId)
   const [direction, setDirection] = useState(0)
   const [fetchState, setFetchState] = useState('idle')
@@ -29,8 +29,9 @@ export default function Lyrics() {
   const album = albums.find(a => a.id === albumId)
 
   useEffect(() => {
-    if (!album) navigate('/', { replace: true })
-  }, [album, navigate])
+    // Wait for the local DB to load before treating a missing album as deleted
+    if (!album && !loading) navigate('/', { replace: true })
+  }, [album, loading, navigate])
 
   useEffect(() => {
     setCurrentTrackId(trackId)
