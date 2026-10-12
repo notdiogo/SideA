@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, GalleryHorizontal, List } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useCollectionContext } from '../../App'
 import { goBack } from './PageTransition'
 import TabBar from './TabBar'
@@ -82,42 +82,36 @@ export default function AppShell({ children }) {
         </div>
 
         <div style={{ minWidth: 88, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', height: 36 }}>
-          {isHome && (
-            <div
-              className="glass"
-              role="group"
-              aria-label="Collection view"
-              style={{ pointerEvents: 'auto', position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', padding: 3, borderRadius: 999 }}
-            >
-              <motion.span
-                aria-hidden="true"
-                initial={false}
-                animate={{ x: `${viewIndex * 100}%` }}
-                transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
+          {isHome && (() => {
+            // One button: shows the view you'd switch to, swaps on tap
+            const next = VIEWS[1 - viewIndex]
+            return (
+              <motion.button
+                type="button"
+                className="glass"
+                whileTap={{ scale: 0.96 }}
+                onClick={() => setViewMode(next.key)}
+                aria-label={`Switch to ${next.label.toLowerCase()}`}
                 style={{
-                  position: 'absolute', top: 3, bottom: 3, left: 3, width: 'calc((100% - 6px) / 2)', borderRadius: 999,
-                  background: 'var(--glass-thumb)', boxShadow: 'inset 0 1px 0 var(--glass-highlight), 0 1px 6px var(--glass-shadow)',
+                  pointerEvents: 'auto', position: 'relative', width: 36, height: 36, borderRadius: 999,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-foreground)',
                 }}
-              />
-              {VIEWS.map(({ key, label, Icon }) => (
-                <motion.button
-                  key={key}
-                  type="button"
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => setViewMode(key)}
-                  aria-label={label}
-                  aria-pressed={viewMode === key}
-                  style={{
-                    position: 'relative', width: 38, height: 30, borderRadius: 999,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: viewMode === key ? 'var(--color-foreground)' : 'var(--color-muted-foreground)',
-                  }}
-                >
-                  <Icon size={16} strokeWidth={1.7} />
-                </motion.button>
-              ))}
-            </div>
-          )}
+              >
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={next.key}
+                    initial={{ opacity: 0, scale: 0.25, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, scale: 0.25, filter: 'blur(4px)' }}
+                    transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                    style={{ display: 'flex' }}
+                  >
+                    <next.Icon size={17} strokeWidth={1.7} />
+                  </motion.span>
+                </AnimatePresence>
+              </motion.button>
+            )
+          })()}
         </div>
       </header>
 

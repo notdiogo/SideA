@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion'
 import { useGesture } from '@use-gesture/react'
@@ -6,7 +6,7 @@ import { Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import EmptyState from '../components/ui/EmptyState'
 import AlbumList from '../components/ui/AlbumList'
-import PageTransition from '../components/layout/PageTransition'
+import PageTransition, { NavTypeContext } from '../components/layout/PageTransition'
 import { sampleColor, setAmbient } from '../lib/ambient'
 import { useFlight, startFlight, coverEl, rectOf } from '../lib/coverFlight'
 
@@ -41,8 +41,13 @@ const FLICK_PROJ  = 0.2   // slots of travel per (slot/s) of release velocity
 const DIVE_AT     = 1.22  // pinch scale that commits to opening the album
 const SPRING      = { type: 'spring', stiffness: 260, damping: 30 }
 
-// Module-level: persists across React Router navigation, resets on page refresh
-let _carouselIndex = 0
+// Module-level: persists across React Router navigation, resets on page refresh.
+// null until the first visit of a session, which pulls a record at random.
+let _carouselIndex = null
+
+// Slow spring for the "flipping through a crate" feel
+const FLIP = { type: 'spring', stiffness: 85, damping: 19 }
+const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 // One cover. Its transform is derived from the shared continuous position `pos`,
 // so it tracks the finger 1:1 while dragging and springs on release.
@@ -136,11 +141,11 @@ export default function Wall() {
   const n = sorted.length
 
   // pos: continuous carousel position in slots (unbounded; wraps via modulo)
-  const pos  = useMotionValue(_carouselIndex)
+  const pos  = useMotionValue(_carouselIndex ?? 0)
   // dive: pinch-out zoom of the whole carousel (1 = rest)
   const dive = useMotionValue(1)
   const labelOpacity = useTransform(dive, [1, 1.3], [1, 0])
-  const [index, setIndex] = useState(_carouselIndex)
+  const [index, setIndex] = useState(_carouselIndex ?? 0)
   const areaRef  = useRef(null)
   const anim     = useRef(null)
   const startPos = useRef(0)
@@ -152,12 +157,37 @@ export default function Wall() {
     if (!n) return
     const sync = (v) => {
       const i = ((Math.round(v) % n) + n) % n
-      _carouselIndex = i
+      if (_carouselIndex !== null) _carouselIndex = i // stays null until the random pick below
       setIndex(i)
     }
     sync(pos.get())
     return pos.on('change', sync)
   }, [n, pos])
+
+  // Landing on the Collection (app launch, or arriving from another tab) reaches into the
+  // crate and flips to a random record. Coming back from an album keeps your place, so
+  // the cover can fly home.
+  const { from } = useContext(NavTypeContext)
+  const landed = useRef(false)
+  useEffect(() => {
+    if (landed.current || loading || !authReady || n < 2) return // wait until the carousel is on screen
+    landed.current = true
+    const cameFromAlbum = from?.startsWith('/album')
+    if (_carouselIndex !== null && cameFromAlbum) return
+
+    const cur = Math.round(pos.get())
+    const curIdx = ((cur % n) + n) % n
+    const target = _carouselIndex === null
+      ? Math.floor(Math.random() * n)
+      : (curIdx + 1 + Math.floor(Math.random() * (n - 1))) % n // any record but the one already showing
+    _carouselIndex = target
+
+    const dest = cur + wrapDelta(target - curIdx, n) // shortest way round the crate
+    if (prefersReducedMotion()) { pos.set(dest); return }
+    // Always show some travel: if the pick is close by, start a few records back
+    if (Math.abs(dest - cur) < 3) pos.set(dest - Math.min(7, n - 1))
+    anim.current = animate(pos, dest, FLIP)
+  }, [n, pos, loading, authReady, from])
 
   const goTo = (delta) => {
     anim.current?.stop()
@@ -240,7 +270,7 @@ export default function Wall() {
   if (loading || !authReady) {
     return (
       <PageTransition>
-        <div style={{ height: 'calc(100dvh - var(--nav-height) - var(--tabbar-h, 0px))' }} />
+        <div style={{ height: 'calc(var(--app-h) - var(--nav-height) - var(--tabbar-h, 0px))' }} />
       </PageTransition>
     )
   }
@@ -271,7 +301,7 @@ export default function Wall() {
     <PageTransition>
       <div
         style={{
-          height: 'calc(100dvh - var(--nav-height) - var(--tabbar-h, 0px))',
+          height: 'calc(var(--app-h) - var(--nav-height) - var(--tabbar-h, 0px))',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -313,8 +343,9 @@ export default function Wall() {
           })}
         </motion.div>
 
-        {/* Centered label — only for the active album */}
-        <motion.div style={{ opacity: labelOpacity, width: '100%', maxWidth: 400, display: 'flex', justifyContent: 'center' }}>
+        {/* Centered label — only for the active album. Fixed-height slot, top-aligned, so a
+            long title that wraps never shifts the covers between albums. */}
+        <motion.div style={{ opacity: labelOpacity, width: '100%', maxWidth: 520, height: 132, marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={current.id}
@@ -322,22 +353,17 @@ export default function Wall() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                marginTop:  28,
-                textAlign:  'center',
-                padding:    '0 32px',
-                width:      '100%',
-              }}
+              style={{ textAlign: 'center', padding: '0 24px', width: '100%' }}
             >
               <p
                 style={{
-                  fontSize:      18,
-                  fontWeight:    600,
+                  fontSize:      24,
+                  fontWeight:    500,
+                  lineHeight:    1.15,
                   color:         'var(--color-foreground)',
-                  letterSpacing: '-0.02em',
-                  overflow:      'hidden',
-                  textOverflow:  'ellipsis',
-                  whiteSpace:    'nowrap',
+                  letterSpacing: '-0.03em',
+                  textWrap:      'balance',
+                  overflowWrap:  'anywhere',
                 }}
               >
                 {current.title}
@@ -345,13 +371,14 @@ export default function Wall() {
               {current.artist && (
                 <p
                   style={{
-                    fontSize:     14,
-                    fontWeight:   300,
-                    color:        'var(--color-muted-foreground)',
-                    marginTop:    4,
-                    overflow:     'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace:   'nowrap',
+                    fontSize:      17,
+                    fontWeight:    400,
+                    lineHeight:    1.25,
+                    color:         'var(--color-muted-foreground)',
+                    letterSpacing: '-0.01em',
+                    marginTop:     8,
+                    textWrap:      'balance',
+                    overflowWrap:  'anywhere',
                   }}
                 >
                   {current.artist}

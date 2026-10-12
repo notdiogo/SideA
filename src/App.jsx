@@ -35,9 +35,9 @@ export default function App() {
   const navType = useNavigationType()
 
   // Derive the transition direction while rendering, so entering and exiting pages agree
-  const [nav, setNav] = useState({ path: location.pathname, dir: 0 })
+  const [nav, setNav] = useState({ path: location.pathname, dir: 0, from: null })
   if (nav.path !== location.pathname) {
-    setNav({ path: location.pathname, dir: directionFor(nav.path, location.pathname) })
+    setNav({ path: location.pathname, dir: directionFor(nav.path, location.pathname), from: nav.path })
   }
   // Track-to-track swipes stay on one page; only the album/track group remounts
   const pageKey = location.pathname.replace(/\/track\/[^/]+$/, '/track')
@@ -72,7 +72,7 @@ export default function App() {
             key={pageKey}
             style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
           >
-            <NavTypeContext.Provider value={{ type: navType, dir: nav.dir }}>
+            <NavTypeContext.Provider value={{ type: navType, dir: nav.dir, from: nav.from }}>
             <Routes location={location}>
               <Route path="/"                                element={<Wall />} />
               <Route path="/profile"                         element={<Profile />} />

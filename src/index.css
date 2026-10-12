@@ -38,6 +38,11 @@
   --leading-loose: 1.8;
 }
 
+/* Full app height. Installed (home-screen) iOS apps keep the layout viewport ~status-bar short,
+   so fixed/bottom-anchored UI floats above the screen edge; 100lvh is the real full height there. */
+:root { --app-h: 100dvh; }
+@media (display-mode: standalone) { :root { --app-h: 100lvh; } }
+
 /* ── Nav background token + safe-area-aware nav height ── */
 :root {
   --color-nav-bg: rgba(239, 239, 239, 0.9);
@@ -105,7 +110,7 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-  min-height: 100dvh;
+  min-height: var(--app-h);
   overflow-x: hidden;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
@@ -113,7 +118,7 @@ body {
 }
 
 #root {
-  min-height: 100dvh;
+  min-height: var(--app-h);
   display: flex;
   flex-direction: column;
 }
@@ -122,6 +127,11 @@ img { display: block; max-width: 100%; }
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
 input, textarea { font-family: inherit; font-size: inherit; }
 a { color: inherit; text-decoration: none; }
+
+/* iOS Safari zooms the page when a focused field is under 16px; keep every field at 16px on touch */
+@media (pointer: coarse) {
+  input, textarea, select { font-size: 16px !important; }
+}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }

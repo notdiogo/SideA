@@ -4,7 +4,7 @@ import { startFlight, coverEl, rectOf } from '../../lib/coverFlight'
 
 // <Routes location={...}> makes React Router report every navigation as POP to the pages
 // it renders, so App reads the real navigation type and passes it down here.
-export const NavTypeContext = createContext({ type: 'PUSH', dir: 0 })
+export const NavTypeContext = createContext({ type: 'PUSH', dir: 0, from: null })
 
 // Direction (custom) comes from App: +1 pushes in from the right, -1 pops in from the
 // left, 0 is a plain fade (used when a cover flies between the screens, so the

@@ -26,7 +26,10 @@ export default function TabBar() {
     <nav
       aria-label="Primary"
       style={{
-        position: 'fixed', left: 0, right: 0, bottom: 'max(12px, env(safe-area-inset-bottom))',
+        position: 'fixed', left: 0, right: 0, height: 68,
+        // Anchored from the true app height (not `bottom`), so it sits the same distance above the
+        // screen edge in Safari and in the installed app
+        top: 'calc(var(--app-h) - 68px - max(12px, env(safe-area-inset-bottom)))',
         zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none',
       }}
     >
