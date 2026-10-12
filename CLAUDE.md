@@ -193,7 +193,7 @@ The app uses a **soft neumorphism / iOS-inspired** aesthetic defined in `src/ind
 ## Image Handling
 
 Client-side image compression is applied in `ImageUpload.jsx` before storing:
-- Max dimension: **600px** (width or height)
+- Max dimension: **1000px** (width or height)
 - Format: **JPEG** at quality **0.82**
 - Stored as base64 data URL in Supabase
 

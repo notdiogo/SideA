@@ -9,9 +9,9 @@ export default function AmbientField() {
   const rgb = useAmbient()
   const { pathname } = useLocation()
 
-  // Only the carousel and album page carry album colour
+  // Carousel, album page and lyrics carry album colour
   useEffect(() => {
-    if (!/^\/(album\/[^/]+)?$/.test(pathname)) setAmbient(null)
+    if (!/^\/(album\/[^/]+(\/track\/[^/]+)?)?$/.test(pathname)) setAmbient(null)
   }, [pathname])
 
   const key = rgb ? rgb.join(' ') : 'none'

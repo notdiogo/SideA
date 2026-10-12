@@ -2,7 +2,7 @@ import { useRef, useState, useCallback } from 'react'
 import { Camera } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-const MAX_SIZE = 600
+const MAX_SIZE = 1000
 
 async function compressImage(file) {
   return new Promise((resolve, reject) => {
