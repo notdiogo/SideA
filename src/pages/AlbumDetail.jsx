@@ -6,7 +6,7 @@ import { useGesture, useDrag } from '@use-gesture/react'
 import { MoreHorizontal, Edit3, Trash2, Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import { useViewport } from '../hooks/useViewport'
-import PageTransition, { goBack } from '../components/layout/PageTransition'
+import PageTransition, { goBack, useSkipIntro } from '../components/layout/PageTransition'
 import { useFlight } from '../lib/coverFlight'
 import { sampleColor, setAmbient } from '../lib/ambient'
 
@@ -48,6 +48,7 @@ export default function AlbumDetail() {
   const { isLandscape, isTablet } = useViewport()
 
   const album = albums.find(a => a.id === albumId)
+  const skipIntro = useSkipIntro() // browser edge-swipe back: don't replay the entrance
   const flight = useFlight()
   const coverHidden = flight?.id === albumId // the flight overlay stands in for the cover
 
@@ -141,7 +142,7 @@ export default function AlbumDetail() {
       type="button"
       custom={i}
       variants={trackVariants}
-      initial="initial"
+      initial={skipIntro ? false : "initial"}
       animate="animate"
       whileTap={{ backgroundColor: 'var(--color-secondary)' }}
       onClick={() => navigate(`/album/${albumId}/track/${track.id}`)}
@@ -287,7 +288,7 @@ export default function AlbumDetail() {
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {/* Vinyl disc behind the art */}
                 <motion.div style={{ position: 'absolute', right: -28, top: 130, transform: 'translateY(-50%)', zIndex: 0, opacity: contentFade }}>
-                  <motion.div initial={{ x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
+                  <motion.div initial={skipIntro ? false : { x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
                     <VinylDisc size={220} />
                   </motion.div>
                 </motion.div>
@@ -341,7 +342,7 @@ export default function AlbumDetail() {
             <motion.div style={{ flex: 1, paddingTop: 4, opacity: contentFade }}>
               {/* Metadata — left aligned in landscape */}
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
+                initial={skipIntro ? false : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 style={{ paddingBottom: 28 }}
@@ -393,7 +394,7 @@ export default function AlbumDetail() {
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {/* Vinyl disc behind the art */}
                 <motion.div style={{ position: 'absolute', right: -28, top: 110, transform: 'translateY(-50%)', zIndex: 0, opacity: contentFade }}>
-                  <motion.div initial={{ x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
+                  <motion.div initial={skipIntro ? false : { x: -64, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', bounce: 0.15, duration: 0.7, delay: 0.3 }}>
                     <VinylDisc size={200} />
                   </motion.div>
                 </motion.div>
@@ -446,7 +447,7 @@ export default function AlbumDetail() {
             <motion.div style={{ opacity: contentFade }}>
             {/* Metadata */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={skipIntro ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               style={{ padding: '36px 32px 0', textAlign: 'center' }}
