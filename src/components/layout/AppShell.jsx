@@ -43,12 +43,17 @@ export default function AppShell({ children }) {
           pointerEvents:  'none',
         }}
       >
-        {/* Scroll-edge fade: solid behind the controls, dissolving just below them */}
+        {/* Scroll-edge effect: content blurs and dissolves under the controls, and the
+            album colour wash still reaches the very top (no opaque band) */}
         <div
           aria-hidden="true"
           style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: 'calc(100% + 20px)', zIndex: -1,
-            background: 'linear-gradient(to bottom, color-mix(in oklab, var(--color-background) 97%, transparent) calc(100% - 12px), transparent)',
+            position: 'absolute', top: 0, left: 0, right: 0, height: 'calc(100% + 24px)', zIndex: -1,
+            background: 'color-mix(in oklab, var(--color-background) 30%, transparent)',
+            WebkitBackdropFilter: 'blur(16px)',
+            backdropFilter: 'blur(16px)',
+            WebkitMaskImage: 'linear-gradient(to bottom, #000 calc(100% - 22px), transparent)',
+            maskImage: 'linear-gradient(to bottom, #000 calc(100% - 22px), transparent)',
           }}
         />
         <div style={{ minWidth: 88, display: 'flex', alignItems: 'center', height: 36 }}>

@@ -153,8 +153,7 @@ export default function AlbumList({ albums, onOpen }) {
       <div
         style={{
           position: 'sticky', top: 0, zIndex: 5,
-          padding: '8px 20px 14px',
-          background: 'linear-gradient(to bottom, color-mix(in oklab, var(--color-background) 98%, transparent) 78%, transparent)',
+          padding: '20px 20px 14px',
         }}
       >
         <div style={{ width: '100%', maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
