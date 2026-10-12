@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, Search, Music } from 'lucide-react'
+import { Loader2, Search, Music, ScanBarcode } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import ImageUpload from '../components/forms/ImageUpload'
 import TrackListEditor from '../components/forms/TrackListEditor'
+import BarcodeScanner from '../components/forms/BarcodeScanner'
 import PageTransition from '../components/layout/PageTransition'
-import { searchRelease, fetchCoverAsBase64 } from '../lib/musicbrainz'
+import { searchRelease, searchReleaseByBarcode, fetchCoverAsBase64 } from '../lib/musicbrainz'
 import { prefetchAlbumLyrics } from '../lib/lyrics'
 
 const inputStyle = {
@@ -50,19 +51,29 @@ function AutoFillPanel({ onConfirm }) {
   const [state, setState] = useState('idle') // idle | loading | preview | error
   const [preview, setPreview] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [scanning, setScanning] = useState(false)
 
   const handleSearch = async () => {
     if (!artist.trim() || !album.trim()) return
+    await runLookup(() => searchRelease(artist.trim(), album.trim()), 'No album found. Try adjusting the artist or title.')
+  }
+
+  const handleBarcode = (code) => {
+    setScanning(false)
+    runLookup(() => searchReleaseByBarcode(code), `No album found for barcode ${code}. Try searching by name.`)
+  }
+
+  const runLookup = async (lookup, notFoundMsg) => {
     setState('loading')
     setErrorMsg('')
     try {
-      const result = await searchRelease(artist.trim(), album.trim())
+      const result = await lookup()
       const cover = await fetchCoverAsBase64(result.mbid)
       setPreview({ ...result, coverImage: cover })
       setState('preview')
     } catch (err) {
       setErrorMsg(err.message === 'No album found'
-        ? 'No album found. Try adjusting the artist or title.'
+        ? notFoundMsg
         : 'Search failed. Check your connection and try again.')
       setState('error')
     }
@@ -80,6 +91,36 @@ function AutoFillPanel({ onConfirm }) {
 
   return (
     <div>
+      <AnimatePresence>
+        {scanning && <BarcodeScanner onDetect={handleBarcode} onClose={() => setScanning(false)} />}
+      </AnimatePresence>
+
+      {state !== 'preview' && (
+        <motion.button
+          whileTap={state === 'loading' ? undefined : { scale: 0.96 }}
+          onClick={() => setScanning(true)}
+          disabled={state === 'loading'}
+          style={{
+            width: '100%',
+            padding: '15px',
+            borderRadius: '999px',
+            background: 'var(--color-primary)',
+            color: 'var(--color-primary-foreground)',
+            fontSize: '15px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            marginBottom: '18px',
+            opacity: state === 'loading' ? 0.5 : 1,
+          }}
+        >
+          <ScanBarcode size={16} strokeWidth={1.5} />
+          Scan barcode
+        </motion.button>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
         <input
           className="field"
