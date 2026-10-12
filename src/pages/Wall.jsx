@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion'
+import { motion, AnimatePresence, animate, useMotionValue, useTransform, frame } from 'framer-motion'
 import { useGesture } from '@use-gesture/react'
 import { Music } from 'lucide-react'
 import { useCollectionContext } from '../App'
@@ -267,7 +267,8 @@ export default function Wall() {
           liftY.set(my < 0 ? my : my * 0.25) // dragging down only gives a little resistance
           if (!last) return
           const vY = diry * vy * 1000 // px/s, negative = upward
-          if (my < -OPEN_DIST || (vY < -OPEN_VEL && my < -24)) openCurrent(vY)
+          // postRender: measure the cover only after Motion has painted the final drag position
+          if (my < -OPEN_DIST || (vY < -OPEN_VEL && my < -24)) frame.postRender(() => openCurrent(vY))
           else liftAnim.current = animate(liftY, 0, { type: 'spring', stiffness: 380, damping: 36, velocity: vY })
           return
         }
