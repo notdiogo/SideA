@@ -6,6 +6,7 @@ import { Music, ChevronRight } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import EmptyState from '../components/ui/EmptyState'
 import PageTransition from '../components/layout/PageTransition'
+import { sampleColor, setAmbient } from '../lib/ambient'
 import { useFlight, startFlight, coverEl, rectOf } from '../lib/coverFlight'
 
 function useCardSize() {
@@ -191,6 +192,9 @@ export default function Wall() {
     const img = new Image()
     img.src = src
     img.decode?.().catch(() => {})
+    let live = true
+    sampleColor(src).then(rgb => { if (live) setAmbient(rgb) }).catch(() => {})
+    return () => { live = false }
   }, [index, sorted])
 
   // Tap (a click that wasn't a drag/pinch): open the centre cover, or bring a side cover forward

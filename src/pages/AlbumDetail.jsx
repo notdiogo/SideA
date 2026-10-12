@@ -7,6 +7,7 @@ import { useCollectionContext } from '../App'
 import { useViewport } from '../hooks/useViewport'
 import PageTransition, { goBack } from '../components/layout/PageTransition'
 import { useFlight } from '../lib/coverFlight'
+import { sampleColor, setAmbient } from '../lib/ambient'
 
 const trackVariants = {
   initial: { opacity: 0 },
@@ -43,6 +44,13 @@ export default function AlbumDetail() {
   const album = albums.find(a => a.id === albumId)
   const flight = useFlight()
   const coverHidden = flight?.id === albumId && flight.dir === 'in'
+
+  useEffect(() => {
+    if (!album?.coverImage) return
+    let live = true
+    sampleColor(album.coverImage).then(rgb => { if (live) setAmbient(rgb) }).catch(() => {})
+    return () => { live = false }
+  }, [album?.coverImage])
 
   // Pinch in to zoom back out to the carousel
   const pinchScale = useMotionValue(1)
@@ -138,6 +146,7 @@ export default function AlbumDetail() {
       >
         <motion.button
           type="button"
+          className="glass"
           whileTap={{ scale: 0.96 }}
           onClick={() => setShowOptions(v => !v)}
           style={{
@@ -147,7 +156,6 @@ export default function AlbumDetail() {
             width:           36,
             height:          36,
             borderRadius:   '999px',
-            background:     'var(--color-secondary)',
             color:          'var(--color-foreground)',
           }}
         >
@@ -157,6 +165,7 @@ export default function AlbumDetail() {
         <AnimatePresence>
           {showOptions && (
             <motion.div
+              className="glass"
               initial={{ opacity: 0, scale: 0.93, y: -4 }}
               animate={{ opacity: 1, scale: 1,    y: 0  }}
               exit={{    opacity: 0, scale: 0.93, y: -4 }}
@@ -165,9 +174,7 @@ export default function AlbumDetail() {
                 position:        'absolute',
                 top:             'calc(100% + 6px)',
                 right:            0,
-                background:      'var(--color-card)',
                 borderRadius:     14,
-                boxShadow:       '0 4px 24px rgba(0,0,0,0.14)',
                 overflow:        'hidden',
                 minWidth:         140,
                 transformOrigin: 'top right',

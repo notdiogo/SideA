@@ -66,26 +66,24 @@ export default function AppShell({ children }) {
           justifyContent:      'space-between',
           padding:             '0 16px',
           paddingTop:          'env(safe-area-inset-top)',
-          background:          isLyrics ? 'transparent' : 'var(--color-nav-bg)',
-          backdropFilter:      isLyrics ? 'none' : 'blur(20px)',
-          WebkitBackdropFilter:isLyrics ? 'none' : 'blur(20px)',
-          transition:          'background 0.3s',
+          pointerEvents:       'none',
         }}
       >
         {/* Left: back button */}
         <div style={{ minWidth: 80, display: 'flex', alignItems: 'center' }}>
           {!isHome && (
             <motion.button
+              className="glass"
               whileTap={{ scale: 0.96 }}
               onClick={() => goBack(navigate)}
               style={{
+                pointerEvents:  'auto',
                 display:        'flex',
                 alignItems:     'center',
                 justifyContent: 'center',
                 width:           36,
                 height:          36,
                 borderRadius:   '999px',
-                background:     'var(--color-secondary)',
                 color:          'var(--color-foreground)',
               }}
             >
@@ -112,17 +110,18 @@ export default function AppShell({ children }) {
           {isHome && (
             <div ref={optionsRef} style={{ position: 'relative' }}>
               <motion.button
+                className="glass"
                 whileTap={{ scale: 0.96 }}
                 onClick={() => setShowOptions(v => !v)}
                 style={{
+                  pointerEvents:  'auto',
                   display:        'flex',
                   alignItems:     'center',
                   justifyContent: 'center',
                   width:           36,
                   height:          36,
                   borderRadius:   '999px',
-                  background:     'var(--color-secondary)',
-                  color:          'var(--color-foreground)',
+                    color:          'var(--color-foreground)',
                 }}
               >
                 <MoreHorizontal size={18} strokeWidth={1.75} />
@@ -131,6 +130,7 @@ export default function AppShell({ children }) {
               <AnimatePresence>
                 {showOptions && (
                   <motion.div
+                    className="glass"
                     initial={{ opacity: 0, scale: 0.93, y: -4 }}
                     animate={{ opacity: 1, scale: 1,    y: 0  }}
                     exit={{    opacity: 0, scale: 0.93, y: -4 }}
@@ -139,9 +139,8 @@ export default function AppShell({ children }) {
                       position:        'absolute',
                       top:             'calc(100% + 6px)',
                       right:            0,
-                      background:      'var(--color-card)',
+                      pointerEvents:   'auto',
                       borderRadius:     14,
-                      boxShadow:       '0 4px 24px rgba(0,0,0,0.14)',
                       overflow:        'hidden',
                       minWidth:         172,
                       transformOrigin: 'top right',
@@ -209,6 +208,7 @@ export default function AppShell({ children }) {
         style={{
           paddingTop:     'var(--nav-height)',
           position:       'relative',
+          zIndex:          1,
           flex:            1,
           display:        'flex',
           flexDirection:  'column',

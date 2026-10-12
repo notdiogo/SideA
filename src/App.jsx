@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { useCollection } from './hooks/useCollection'
 import AppShell from './components/layout/AppShell'
 import CoverFlight from './components/layout/CoverFlight'
+import AmbientField from './components/layout/AmbientField'
 import Wall from './pages/Wall'
 import AddRecord from './pages/AddRecord'
 import AlbumDetail from './pages/AlbumDetail'
@@ -40,6 +41,7 @@ export default function App() {
   return (
     <CollectionContext.Provider value={{ ...collection, viewMode, setViewMode, theme, setTheme }}>
       <MotionConfig reducedMotion="user">
+      <AmbientField />
       <AppShell>
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
