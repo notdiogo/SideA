@@ -11,6 +11,7 @@ export default function CoverFlight() {
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const s = useMotionValue(1)
+  const radius = useMotionValue(8)
 
   useEffect(() => {
     if (!flight) return
@@ -31,6 +32,8 @@ export default function CoverFlight() {
       }
       const to = rectOf(el)
       const { from } = flight
+      // Scaling scales the corner too; hold it near 8px by using the mean scale as the baseline
+      radius.set(8 / ((1 + to.w / from.w) / 2))
       const run = Promise.all([
         animate(x, to.x - from.x, FLIGHT),
         animate(y, to.y - from.y, FLIGHT),
@@ -41,7 +44,7 @@ export default function CoverFlight() {
     requestAnimationFrame(launch)
 
     return () => { cancelled = true; controls.forEach(c => c.stop()) }
-  }, [flight, reduce, x, y, s])
+  }, [flight, reduce, x, y, s, radius])
 
   if (!flight) return null
   const { from } = flight
@@ -60,7 +63,7 @@ export default function CoverFlight() {
         x, y, scale: s,
         transformOrigin: '0 0',
         objectFit:       'cover',
-        borderRadius:     8,
+        borderRadius:     radius,
         boxShadow:       '0 12px 36px rgba(0,0,0,0.14)',
         zIndex:           60,
         pointerEvents:   'none',

@@ -8,6 +8,7 @@ let state = null
 const subs = new Set()
 const emit = () => subs.forEach(fn => fn())
 
+export const getFlight = () => state
 export const startFlight = (flight) => { state = flight; emit() }
 export const endFlight = () => { if (state) { state = null; emit() } }
 export const useFlight = () =>

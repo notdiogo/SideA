@@ -1,18 +1,19 @@
+import { createContext, useContext } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigationType } from 'react-router-dom'
 import { startFlight, coverEl, rectOf } from '../../lib/coverFlight'
 
-// Opacity-only: the cover travels in its own overlay (CoverFlight), and
-// position:fixed children aren't trapped by a parent transform.
-const variants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit:    { opacity: 0 },
-}
+// <Routes location={...}> makes React Router report every navigation as POP to the pages
+// it renders, so App reads the real navigation type and passes it down here.
+export const NavTypeContext = createContext({ type: 'PUSH', dir: 0 })
 
-const transition = {
-  duration: 0.28,
-  ease: [0.16, 1, 0.3, 1],
+// Direction (custom) comes from App: +1 pushes in from the right, -1 pops in from the
+// left, 0 is a plain fade (used when a cover flies between the screens, so the
+// destination cover isn't displaced while it is measured). Exits are shorter and
+// smaller than enters, and travel only a short, layered distance.
+const SLIDE = 28
+const variants = {
+  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
+  exit:    (d = 0) => ({ opacity: 0, x: d * -SLIDE * 0.5, transition: { duration: 0.2, ease: [0.4, 0, 1, 1] } }),
 }
 
 // Set by the in-app back control / pinch-out so a POP navigation still animates
@@ -30,7 +31,7 @@ export function goBack(navigate) {
 }
 
 export default function PageTransition({ children, className = '' }) {
-  const navType = useNavigationType()
+  const { type: navType, dir } = useContext(NavTypeContext)
 
   // For browser edge-swipe back, skip the enter/exit animation entirely — the
   // browser's own gesture handles the visual feedback, and mixing both causes
@@ -40,8 +41,7 @@ export default function PageTransition({ children, className = '' }) {
       <motion.div
         className={className}
         initial={false}
-        exit={{ opacity: 0 }}
-        transition={transition}
+        exit={{ opacity: 0, transition: { duration: 0.2 } }}
         style={{ flex: 1, minWidth: 0 }}
       >
         {children}
@@ -53,10 +53,11 @@ export default function PageTransition({ children, className = '' }) {
     <motion.div
       className={className}
       variants={variants}
-      initial="initial"
+      // Entering page: direction is known from context at mount. (Exit reads the live
+      // direction from AnimatePresence's custom prop, which is what an exit needs.)
+      initial={{ opacity: 0, x: dir * SLIDE }}
       animate="animate"
       exit="exit"
-      transition={transition}
       style={{ flex: 1, minWidth: 0 }}
     >
       {children}

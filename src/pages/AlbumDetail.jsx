@@ -10,11 +10,13 @@ import PageTransition, { goBack } from '../components/layout/PageTransition'
 import { useFlight } from '../lib/coverFlight'
 import { sampleColor, setAmbient } from '../lib/ambient'
 
+// Entrance choreography after the cover lands: cover (0–.55s) → vinyl (.3) → metadata (.25) → tracks (.35+)
 const trackVariants = {
-  initial: { opacity: 0 },
+  initial: { opacity: 0, y: 8 },
   animate: (i) => ({
     opacity: 1,
-    transition: { delay: i * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] },
+    y: 0,
+    transition: { delay: 0.3 + Math.min(i, 10) * 0.035, duration: 0.4, ease: [0.16, 1, 0.3, 1] },
   }),
 }
 
@@ -273,7 +275,7 @@ export default function AlbumDetail() {
                     height:        260,
                     borderRadius: '8px',
                     overflow:     'hidden',
-                    boxShadow:    '0 8px 32px rgba(0,0,0,0.12)',
+                    boxShadow:    '0 12px 36px rgba(0,0,0,0.14)',
                   }}
                 >
                   {artContent}
@@ -307,7 +309,7 @@ export default function AlbumDetail() {
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: 0.25, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 style={{ paddingBottom: 28 }}
               >
                 {album.artist && (
@@ -374,7 +376,7 @@ export default function AlbumDetail() {
                     height:        220,
                     borderRadius: '8px',
                     overflow:     'hidden',
-                    boxShadow:    '0 8px 32px rgba(0,0,0,0.12)',
+                    boxShadow:    '0 12px 36px rgba(0,0,0,0.14)',
                   }}
                 >
                   {artContent}
@@ -406,7 +408,7 @@ export default function AlbumDetail() {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ delay: 0.25, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               style={{ padding: '36px 32px 0', textAlign: 'center' }}
             >
               {album.artist && (

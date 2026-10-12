@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useCollectionContext } from '../App'
 import { useSwipe } from '../hooks/useSwipe'
 import { useViewport } from '../hooks/useViewport'
+import PageTransition from '../components/layout/PageTransition'
 import { fetchLyrics } from '../lib/lyrics'
 import { sampleColor, setAmbient } from '../lib/ambient'
 
@@ -171,6 +172,7 @@ export default function Lyrics() {
   // ── Landscape two-column layout (tablet only) ─────────────────────────────
   if (isTablet && isLandscape) {
     return (
+      <PageTransition>
       <div
         style={{
           height:        'calc(100dvh - var(--nav-height))',
@@ -244,11 +246,13 @@ export default function Lyrics() {
           </AnimatePresence>
         </div>
       </div>
+      </PageTransition>
     )
   }
 
   // ── Portrait layout ───────────────────────────────────────────────────────
   return (
+    <PageTransition>
     <div
       style={{
         height:        'calc(100dvh - var(--nav-height))',
@@ -336,5 +340,6 @@ export default function Lyrics() {
         </motion.button>
       </motion.div>
     </div>
+    </PageTransition>
   )
 }
