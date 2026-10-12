@@ -62,7 +62,14 @@ export default function AlbumDetail() {
   // past the threshold flies the cover back into the gallery (the reverse of swipe-up-to-open)
   const coverY = useMotionValue(0)
   const coverScale = useTransform(coverY, [0, 240], [1, 0.9])
-  const contentFade = useTransform(coverY, [0, 150], [1, 0])
+  // Everything except the cover (vinyl, reflection, title, tracks) fades with the drag, and
+  // clears out quickly once any "back" flight starts so no ghost lingers behind the gallery
+  const leaving = useMotionValue(1)
+  const contentFade = useTransform([coverY, leaving], ([y, l]) => l * (1 - Math.min(1, Math.max(0, y / 150))))
+  const leavingNow = flight?.id === albumId && flight.dir === 'out'
+  useEffect(() => {
+    if (leavingNow) animate(leaving, 0, { duration: 0.12, ease: 'easeOut' })
+  }, [leavingNow, leaving])
   const coverAnim = useRef(null)
   const bindCover = useDrag(
     ({ first, last, movement: [, my], velocity: [, vy], direction: [, diry] }) => {
