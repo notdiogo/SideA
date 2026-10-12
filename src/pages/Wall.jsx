@@ -305,11 +305,14 @@ export default function Wall() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
           overflow: 'hidden',
           userSelect: 'none',
         }}
       >
+        {/* Spare height goes mostly above the covers (≈10:1), so the record sits at the optical
+            centre of the screen rather than the group of cover + title */}
+        <div style={{ flex: 1, minHeight: 0 }} />
+
         {/* Gesture area — drag follows the finger, pinch-out dives into the album */}
         <motion.div
           ref={areaRef}
@@ -387,6 +390,8 @@ export default function Wall() {
             </motion.div>
           </AnimatePresence>
         </motion.div>
+
+        <div style={{ flex: 0.1, minHeight: 0 }} />
       </div>
     </PageTransition>
   )
