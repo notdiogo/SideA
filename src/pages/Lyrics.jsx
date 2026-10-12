@@ -175,7 +175,7 @@ export default function Lyrics() {
       <PageTransition>
       <div
         style={{
-          height:        'calc(100dvh - var(--nav-height))',
+          height:        'calc(var(--app-h) - var(--nav-height))',
           display:       'flex',
           flexDirection: 'row',
         }}
@@ -255,7 +255,7 @@ export default function Lyrics() {
     <PageTransition>
     <div
       style={{
-        height:        'calc(100dvh - var(--nav-height))',
+        height:        'calc(var(--app-h) - var(--nav-height))',
         display:       'flex',
         flexDirection: 'column',
         position:      'relative',

@@ -19,7 +19,7 @@ export default function AmbientField() {
   const chroma = rgb ? Math.max(...rgb) - Math.min(...rgb) : 0
   const k = 0.2 + 0.8 * Math.min(1, chroma / 90)
   return (
-    <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+    <div aria-hidden="true" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 'var(--app-h)', zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
       <AnimatePresence initial={false}>
         {rgb && (
           <motion.div

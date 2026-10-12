@@ -148,7 +148,7 @@ export default function AlbumList({ albums, onOpen }) {
 
   let rowIndex = 0
   return (
-    <div style={{ overflowY: 'auto', height: 'calc(100dvh - var(--nav-height))' }}>
+    <div style={{ overflowY: 'auto', height: 'calc(var(--app-h) - var(--nav-height))' }}>
       {/* Sticky controls */}
       <div
         style={{
