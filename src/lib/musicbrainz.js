@@ -125,7 +125,8 @@ export async function fetchCoverAsBase64(mbid, groupId) {
   ].filter(Boolean)
   for (const url of urls) {
     try {
-      const res = await fetch(url, { headers: { 'User-Agent': UA } })
+      // No custom headers: they force a CORS preflight, which can't follow the archive.org redirect
+      const res = await fetch(url)
       if (res.ok) return await compressBlob(await res.blob())
     } catch { /* try next */ }
   }
