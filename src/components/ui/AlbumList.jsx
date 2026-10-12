@@ -154,7 +154,7 @@ export default function AlbumList({ albums, onOpen }) {
         style={{
           position: 'sticky', top: 0, zIndex: 5,
           padding: '8px 20px 14px',
-          background: 'linear-gradient(to bottom, color-mix(in oklab, var(--color-background) 94%, transparent) 70%, transparent)',
+          background: 'linear-gradient(to bottom, color-mix(in oklab, var(--color-background) 98%, transparent) 78%, transparent)',
         }}
       >
         <div style={{ width: '100%', maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -176,7 +176,7 @@ export default function AlbumList({ albums, onOpen }) {
 
           {/* Sort + group */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <div className="glass" style={{ display: 'flex', flex: 1, borderRadius: 999, padding: 3, position: 'relative' }}>
+            <div className="glass" style={{ display: 'grid', gridTemplateColumns: `repeat(${SORTS.length}, minmax(0, 1fr))`, flex: 1, minWidth: 0, borderRadius: 999, padding: 3, position: 'relative' }}>
               {/* Sliding thumb: equal-width segments, so position is a plain percentage */}
               <motion.span
                 aria-hidden="true"
@@ -199,7 +199,7 @@ export default function AlbumList({ albums, onOpen }) {
                     whileTap={{ scale: 0.96 }}
                     onClick={() => pickSort(s)}
                     style={{
-                      position: 'relative', flex: 1, padding: '8px 4px', borderRadius: 999,
+                      position: 'relative', minWidth: 0, padding: '8px 2px', borderRadius: 999,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                       fontSize: 13, letterSpacing: '-0.01em', fontWeight: active ? 500 : 400,
                       color: active ? 'var(--color-foreground)' : 'var(--color-muted-foreground)',
@@ -207,8 +207,8 @@ export default function AlbumList({ albums, onOpen }) {
                   >
                     <span style={{ position: 'relative' }}>{s.label}</span>
                     {active && (dir === 'asc'
-                      ? <ArrowUp size={12} strokeWidth={1.8} style={{ position: 'relative' }} />
-                      : <ArrowDown size={12} strokeWidth={1.8} style={{ position: 'relative' }} />)}
+                      ? <ArrowUp size={12} strokeWidth={1.8} style={{ position: 'relative', flexShrink: 0 }} />
+                      : <ArrowDown size={12} strokeWidth={1.8} style={{ position: 'relative', flexShrink: 0 }} />)}
                   </motion.button>
                 )
               })}
@@ -222,13 +222,13 @@ export default function AlbumList({ albums, onOpen }) {
               aria-label="Group by artist"
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                height: 40, padding: '0 14px', borderRadius: 999, fontSize: 13, fontWeight: 500, flexShrink: 0,
+                height: 40, padding: '0 14px', borderRadius: 999, fontSize: 13, fontWeight: 500, flexShrink: 0, minWidth: 40,
                 background: grouped ? 'var(--color-foreground)' : undefined,
                 color: grouped ? 'var(--color-background)' : 'var(--color-foreground)',
               }}
             >
               <Users size={14} strokeWidth={1.7} />
-              Artists
+              <span className="hide-narrow">Artists</span>
             </motion.button>
           </div>
         </div>

@@ -151,6 +151,9 @@ a { color: inherit; text-decoration: none; }
 .field { box-shadow: inset 0 0 0 1px var(--color-border); }
 .field:focus { box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--color-foreground) 40%, transparent); }
 
+/* Labels that give way to icons on very narrow phones */
+@media (max-width: 359px) { .hide-narrow { display: none; } }
+
 /* ── Animations ── */
 @keyframes spin {
   from { transform: rotate(0deg); }
