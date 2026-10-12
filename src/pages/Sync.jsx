@@ -135,7 +135,7 @@ export default function Sync() {
 
   return (
     <PageTransition>
-      <div style={{ maxWidth: 420, margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ width: '100%', maxWidth: 420, margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {session ? (
           <div style={cardStyle}>
             <div>

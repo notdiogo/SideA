@@ -42,7 +42,7 @@ export default function PageTransition({ children, className = '' }) {
         initial={false}
         exit={{ opacity: 0 }}
         transition={transition}
-        style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+        style={{ flex: 1, minWidth: 0 }}
       >
         {children}
       </motion.div>
@@ -57,7 +57,7 @@ export default function PageTransition({ children, className = '' }) {
       animate="animate"
       exit="exit"
       transition={transition}
-      style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+      style={{ flex: 1, minWidth: 0 }}
     >
       {children}
     </motion.div>

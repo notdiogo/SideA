@@ -187,6 +187,7 @@ export default function Wall() {
 
   // Decode the focused cover ahead of time so the dive never stalls on first paint
   useEffect(() => {
+    if (viewMode === 'list') { setAmbient(null); return }
     const src = sorted[index]?.coverImage
     if (!src) return
     const img = new Image()
@@ -195,7 +196,7 @@ export default function Wall() {
     let live = true
     sampleColor(src).then(rgb => { if (live) setAmbient(rgb) }).catch(() => {})
     return () => { live = false }
-  }, [index, sorted])
+  }, [index, sorted, viewMode])
 
   // Tap (a click that wasn't a drag/pinch): open the centre cover, or bring a side cover forward
   const onAreaClick = (e) => {
@@ -253,6 +254,17 @@ export default function Wall() {
 
   // ── List view ─────────────────────────────────────────────────────────────
   if (viewMode === 'list') {
+    // Group by the artist's initial; anything non-alphabetic goes under "#"
+    const groups = []
+    sorted.forEach(album => {
+      const ch = (album.artist || album.title || '#').trim().charAt(0).toUpperCase()
+      const letter = /[A-Z]/.test(ch) ? ch : '#'
+      const last = groups[groups.length - 1]
+      if (last && last.letter === letter) last.items.push(album)
+      else groups.push({ letter, items: [album] })
+    })
+    let rowIndex = 0
+
     return (
       <PageTransition>
         <div
@@ -261,79 +273,84 @@ export default function Wall() {
             height:    'calc(100dvh - var(--nav-height))',
           }}
         >
-          <div style={{ maxWidth: 600, margin: '0 auto' }}>
-          {sorted.map(album => (
-            <button
-              key={album.id}
-              type="button"
-              onClick={() => navigate(`/album/${album.id}`)}
-              style={{
-                display:     'flex',
-                alignItems:  'center',
-                gap:          12,
-                width:       '100%',
-                padding:     '10px 16px',
-                borderBottom:'1px solid var(--color-border)',
-                background:  'none',
-                cursor:      'pointer',
-              }}
-            >
-              {/* Thumbnail */}
-              <div
-                style={{
-                  width:        52,
-                  height:       52,
-                  borderRadius:  8,
-                  overflow:     'hidden',
-                  flexShrink:    0,
-                  background:   'var(--color-secondary)',
-                  display:      'flex',
-                  alignItems:   'center',
-                  justifyContent:'center',
-                }}
-              >
-                {album.coverImage ? (
-                  <img
-                    src={album.coverImage}
-                    alt={album.title}
-                    draggable={false}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <Music size={18} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
-                )}
-              </div>
-
-              {/* Text */}
-              <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                <p style={{
-                  fontSize:     15,
-                  fontWeight:   500,
-                  color:       'var(--color-foreground)',
-                  overflow:    'hidden',
-                  textOverflow:'ellipsis',
-                  whiteSpace:  'nowrap',
-                }}>
-                  {album.title}
+          <div style={{ width: '100%', maxWidth: 640, margin: '0 auto', padding: '8px 20px calc(48px + env(safe-area-inset-bottom))' }}>
+            {groups.map(group => (
+              <section key={group.letter}>
+                <p
+                  style={{
+                    padding:       '28px 0 10px',
+                    fontSize:      11,
+                    fontWeight:    500,
+                    letterSpacing: '0.14em',
+                    color:         'var(--color-muted-foreground)',
+                  }}
+                >
+                  {group.letter}
                 </p>
-                {album.artist && (
-                  <p style={{
-                    fontSize:     13,
-                    fontWeight:   300,
-                    color:       'var(--color-muted-foreground)',
-                    marginTop:    2,
-                    overflow:    'hidden',
-                    textOverflow:'ellipsis',
-                    whiteSpace:  'nowrap',
-                  }}>
-                    {album.artist}
-                  </p>
-                )}
-              </div>
+                {group.items.map(album => {
+                  const i = rowIndex++
+                  return (
+                    <motion.button
+                      key={album.id}
+                      type="button"
+                      onClick={() => navigate(`/album/${album.id}`)}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.35, delay: Math.min(i, 10) * 0.03, ease: [0.16, 1, 0.3, 1] }}
+                      whileTap={{ scale: 0.98 }}
+                      style={{
+                        display:    'flex',
+                        alignItems: 'center',
+                        gap:         16,
+                        width:      '100%',
+                        padding:    '8px 0',
+                        background: 'none',
+                        cursor:     'pointer',
+                        textAlign:  'left',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width:          60,
+                          height:         60,
+                          borderRadius:    6,
+                          overflow:       'hidden',
+                          flexShrink:      0,
+                          background:     'var(--color-secondary)',
+                          boxShadow:      '0 4px 14px rgba(0,0,0,0.12)',
+                          display:        'flex',
+                          alignItems:     'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {album.coverImage ? (
+                          <img
+                            src={album.coverImage}
+                            alt=""
+                            draggable={false}
+                            loading="lazy"
+                            decoding="async"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <Music size={20} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)' }} />
+                        )}
+                      </div>
 
-              <ChevronRight size={16} strokeWidth={1.5} style={{ color: 'var(--color-muted-foreground)', flexShrink: 0 }} />
-            </button>
-          ))}
+                      <div style={{ flex: 1, minWidth: 0, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}>
+                        <p style={{ fontSize: 15, fontWeight: 500, letterSpacing: '-0.015em', color: 'var(--color-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {album.title}
+                        </p>
+                        <p style={{ display: 'flex', gap: 8, fontSize: 12, fontWeight: 400, color: 'var(--color-muted-foreground)', marginTop: 4, whiteSpace: 'nowrap' }}>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{album.artist}</span>
+                          {album.year && <span style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '0.04em', flexShrink: 0 }}>· {album.year}</span>}
+                        </p>
+                      </div>
+                    </motion.button>
+                  )
+                })}
+              </section>
+            ))}
           </div>
         </div>
       </PageTransition>

@@ -18,7 +18,6 @@ const inputStyle = {
   color: 'var(--color-foreground)',
   fontSize: '15px',
   outline: 'none',
-  boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
 }
 
 function Field({ label, error, children }) {
@@ -26,9 +25,9 @@ function Field({ label, error, children }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <label
         style={{
-          fontSize: '12px',
+          fontSize: '11px',
           fontWeight: 500,
-          letterSpacing: '0.08em',
+          letterSpacing: '0.14em',
           textTransform: 'uppercase',
           color: 'var(--color-muted-foreground)',
         }}
@@ -83,6 +82,7 @@ function AutoFillPanel({ onConfirm }) {
     <div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
         <input
+          className="field"
           style={inputStyle}
           value={artist}
           onChange={e => setArtist(e.target.value)}
@@ -91,6 +91,7 @@ function AutoFillPanel({ onConfirm }) {
           disabled={state === 'loading'}
         />
         <input
+          className="field"
           style={inputStyle}
           value={album}
           onChange={e => setAlbum(e.target.value)}
@@ -107,8 +108,8 @@ function AutoFillPanel({ onConfirm }) {
           disabled={state === 'loading' || !artist.trim() || !album.trim()}
           style={{
             width: '100%',
-            padding: '13px',
-            borderRadius: '14px',
+            padding: '15px',
+            borderRadius: '999px',
             background: (state === 'loading' || !artist.trim() || !album.trim()) ? 'var(--color-secondary)' : 'var(--color-primary)',
             color: (state === 'loading' || !artist.trim() || !album.trim()) ? 'var(--color-muted-foreground)' : 'var(--color-primary-foreground)',
             fontSize: '15px',
@@ -155,8 +156,8 @@ function AutoFillPanel({ onConfirm }) {
             style={{
               marginTop: '14px',
               background: 'var(--color-card)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
+              borderRadius: '20px',
+              boxShadow: 'inset 0 0 0 1px var(--color-border), 0 8px 28px rgba(0,0,0,0.06)',
               overflow: 'hidden',
             }}
           >
@@ -197,7 +198,7 @@ function AutoFillPanel({ onConfirm }) {
             {/* Track list preview */}
             {preview.tracks.length > 0 && (
               <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', padding: '10px 14px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '6px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '6px' }}>
                   Tracks
                 </p>
                 <div style={{ maxHeight: 120, overflowY: 'auto' }}>
@@ -217,7 +218,7 @@ function AutoFillPanel({ onConfirm }) {
                 whileTap={{ scale: 0.96 }}
                 onClick={() => onConfirm(preview)}
                 style={{
-                  flex: 1, padding: '11px', borderRadius: '12px',
+                  flex: 1, padding: '13px', borderRadius: '999px',
                   background: 'var(--color-primary)', color: 'var(--color-primary-foreground)', fontSize: '14px', fontWeight: 600,
                 }}
               >
@@ -227,7 +228,7 @@ function AutoFillPanel({ onConfirm }) {
                 whileTap={{ scale: 0.96 }}
                 onClick={handleReset}
                 style={{
-                  flex: 1, padding: '11px', borderRadius: '12px',
+                  flex: 1, padding: '13px', borderRadius: '999px',
                   background: 'var(--color-secondary)', color: 'var(--color-muted-foreground)', fontSize: '14px', fontWeight: 500,
                 }}
               >
@@ -333,37 +334,51 @@ export default function AddRecord() {
 
   return (
     <PageTransition>
-      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px 48px' }}>
+      <div style={{ width: '100%', maxWidth: '640px', margin: '0 auto', padding: '28px 20px 64px' }}>
 
         {/* Mode toggle */}
         {!isEditing && (
           <div
+            className="glass"
             style={{
               display: 'flex',
-              background: 'var(--color-secondary)',
-              borderRadius: '12px',
-              padding: '3px',
-              marginBottom: '24px',
+              position: 'relative',
+              borderRadius: '999px',
+              padding: '4px',
+              marginBottom: '32px',
             }}
           >
             {['autofill', 'manual'].map(m => (
               <motion.button
                 key={m}
+                type="button"
                 whileTap={{ scale: 0.96 }}
                 onClick={() => setMode(m)}
                 style={{
                   flex: 1,
-                  padding: '8px',
-                  borderRadius: '10px',
-                  background: mode === m ? 'var(--color-card)' : 'transparent',
+                  position: 'relative',
+                  padding: '10px',
+                  borderRadius: '999px',
                   color: mode === m ? 'var(--color-foreground)' : 'var(--color-muted-foreground)',
                   fontSize: '14px',
-                  fontWeight: mode === m ? 600 : 400,
-                  boxShadow: mode === m ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                  transition: 'background 0.15s, color 0.15s',
+                  fontWeight: mode === m ? 500 : 400,
+                  letterSpacing: '-0.01em',
                 }}
               >
-                {m === 'autofill' ? 'Auto-fill' : 'Manual'}
+                {mode === m && (
+                  <motion.span
+                    layoutId="mode-thumb"
+                    transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: '999px',
+                      background: 'var(--color-card)',
+                      boxShadow: '0 1px 6px rgba(0,0,0,0.1)',
+                    }}
+                  />
+                )}
+                <span style={{ position: 'relative' }}>{m === 'autofill' ? 'Auto-fill' : 'Manual'}</span>
               </motion.button>
             ))}
           </div>
@@ -384,7 +399,7 @@ export default function AddRecord() {
                   padding: '10px 14px',
                   borderRadius: '10px',
                   background: 'var(--color-card)',
-                  boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
+                  boxShadow: 'inset 0 0 0 1px var(--color-border)',
                   fontSize: '13px',
                   color: 'var(--color-muted-foreground)',
                   fontWeight: 300,
@@ -401,7 +416,8 @@ export default function AddRecord() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
               <Field label="Album title" error={errors.title}>
                 <input
-                  style={{ ...inputStyle, boxShadow: errors.title ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)' }}
+          className="field"
+                  style={{ ...inputStyle, boxShadow: errors.title ? '0 0 0 2px oklch(55% 0.18 25)' : undefined }}
                   value={form.title}
                   onChange={setInput('title')}
                   placeholder="e.g. Rumours"
@@ -409,7 +425,8 @@ export default function AddRecord() {
               </Field>
               <Field label="Artist" error={errors.artist}>
                 <input
-                  style={{ ...inputStyle, boxShadow: errors.artist ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)' }}
+          className="field"
+                  style={{ ...inputStyle, boxShadow: errors.artist ? '0 0 0 2px oklch(55% 0.18 25)' : undefined }}
                   value={form.artist}
                   onChange={setInput('artist')}
                   placeholder="e.g. Fleetwood Mac"
@@ -417,7 +434,8 @@ export default function AddRecord() {
               </Field>
               <Field label="Year" error={errors.year}>
                 <input
-                  style={{ ...inputStyle, boxShadow: errors.year ? '0 0 0 2px oklch(55% 0.18 25)' : '0 1px 6px rgba(0,0,0,0.06)' }}
+          className="field"
+                  style={{ ...inputStyle, boxShadow: errors.year ? '0 0 0 2px oklch(55% 0.18 25)' : undefined }}
                   value={form.year}
                   onChange={setInput('year')}
                   placeholder="e.g. 1977"
@@ -428,7 +446,7 @@ export default function AddRecord() {
             </div>
 
             <div style={{ marginBottom: '32px' }}>
-              <h3 style={{ fontSize: '12px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '12px' }}>
+              <h3 style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: '12px' }}>
                 Track list
               </h3>
               <TrackListEditor tracks={form.tracks} onChange={set('tracks')} />
@@ -439,7 +457,7 @@ export default function AddRecord() {
               type="submit"
               disabled={saving}
               style={{
-                width: '100%', padding: '14px', borderRadius: '14px',
+                width: '100%', padding: '16px', borderRadius: '999px',
                 background: 'var(--color-primary)', color: 'var(--color-primary-foreground)', fontSize: '15px', fontWeight: 600,
                 cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'opacity 0.2s',
               }}

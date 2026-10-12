@@ -225,11 +225,12 @@ export default function AlbumDetail() {
       </div>
 
       <PageTransition>
-        <motion.div {...bindPinch()} style={{ scale: pinchScale, flex: 1, touchAction: 'pan-y', transformOrigin: '50% 30%' }}>
+        <motion.div {...bindPinch()} style={{ scale: pinchScale, flex: 1, minWidth: 0, width: '100%', touchAction: 'pan-y', transformOrigin: '50% 30%' }}>
         {isTabletLandscape ? (
           /* ── Landscape: two-column ── */
           <div
             style={{
+              width:       '100%',
               maxWidth:    1100,
               margin:      '0 auto',
               display:     'flex',
@@ -345,7 +346,7 @@ export default function AlbumDetail() {
           </div>
         ) : (
           /* ── Portrait: stacked ── */
-          <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
+          <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
 
             {/* Cover + vinyl */}
             <div style={{ padding: '44px 32px 0', display: 'flex', justifyContent: 'center' }}>
